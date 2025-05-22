@@ -193,10 +193,14 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       // Sort metrics from highest to lowest value
       metricResults.sort((a, b) => b.value - a.value);
       
-      // Generate content with sorted metrics
+      // Generate content with sorted metrics in a table format
+      content = '<table class="metrics-table">';
+      content += '<thead><tr><th>Valor</th><th>Métrica</th></tr></thead>';
+      content += '<tbody>';
       for (const result of metricResults) {
-        content += `<strong>${result.value}</strong> ${result.label}.<br/>`;
+        content += `<tr><td><strong>${result.value}</strong></td><td>${result.label}</td></tr>`;
       }
+      content += '</tbody></table>';
 
       // Get the number of processed files
       const processedFilesCount = this.csvManager.getProcessedFilesCount();

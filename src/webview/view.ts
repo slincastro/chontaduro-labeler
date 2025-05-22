@@ -56,6 +56,47 @@ public getHtml(title: string, processedFilesCount: number, content: string): str
             .nav-buttons i {
               font-size: 1.2em;
             }
+            
+            /* Styles for metrics table */
+            .metrics-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 1em 0;
+              font-size: 0.95em;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              border-radius: 8px;
+              overflow: hidden;
+            }
+            
+            .metrics-table thead {
+              background-color: #2c3e50;
+              color: white;
+            }
+            
+            .metrics-table th {
+              padding: 12px 15px;
+              text-align: left;
+              font-weight: bold;
+            }
+            
+            .metrics-table td {
+              padding: 10px 15px;
+              border-bottom: 1px solid #ddd;
+            }
+            
+            .metrics-table tbody tr:nth-child(even) {
+              background-color: rgba(0, 0, 0, 0.05);
+            }
+            
+            .metrics-table tbody tr:hover {
+              background-color: rgba(0, 0, 0, 0.075);
+            }
+            
+            .metrics-table td:first-child {
+              font-weight: bold;
+              text-align: center;
+              width: 80px;
+            }
           </style>
         </head>
         <body style="font-family: sans-serif; padding: 1em;">
