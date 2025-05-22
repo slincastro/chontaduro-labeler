@@ -6,6 +6,29 @@
     <!-- Font Awesome CDN (gratuito) -->
     <script src="https://kit.fontawesome.com/6a2b987c6b.js" crossorigin="anonymous"></script>
     <style>
+      .language-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1em;
+        padding: 0.5em;
+        border-radius: 8px;
+        color: white;
+      }
+      
+      .language-icon {
+        font-size: 1.5em;
+        margin-right: 0.5em;
+      }
+      
+      .language-name {
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+      
+      .language-subtitle {
+        font-size: 0.9em;
+      }
+      
       .nav-buttons {
         margin-top: 1.5em;
         display: flex;
@@ -43,6 +66,15 @@
   </head>
 
   <body style="font-family: sans-serif; padding: 1em;">
+    <!-- Language info section -->
+    <div id="languageInfoContainer" class="language-info">
+      <i id="languageIconElement" class="language-icon"></i>
+      <div>
+        <div id="languageNameElement" class="language-name"></div>
+        <div class="language-subtitle">Analyzing code metrics</div>
+      </div>
+    </div>
+    
     <div class="nav-buttons">
       <button onclick="navigate('prev')">
         <i class="fas fa-backward"></i> <span>Anterior</span>
@@ -70,6 +102,31 @@
     <script>
       const vscode = acquireVsCodeApi();
 
+      // Set language information
+      function setLanguageInfo(name, icon, color) {
+        console.log(`Setting language info: ${name}, ${icon}, ${color}`);
+        
+        const container = document.getElementById('languageInfoContainer');
+        const iconElement = document.getElementById('languageIconElement');
+        const nameElement = document.getElementById('languageNameElement');
+        
+        if (!container || !iconElement || !nameElement) {
+          console.error('Could not find language info elements');
+          return;
+        }
+        
+        // Set background color
+        container.style.backgroundColor = color;
+        
+        // Set icon class
+        iconElement.className = icon + ' language-icon';
+        
+        // Set language name
+        nameElement.textContent = name;
+        
+        console.log('Language info set successfully');
+      }
+
       function navigate(direction) {
         vscode.postMessage({ command: 'navigate', direction });
       }
@@ -82,11 +139,30 @@
       }
 
       window.addEventListener('message', event => {
+        console.log('Message received:', event.data);
         const message = event.data;
+        
         if (message.command === 'resetRefactoringCheckbox') {
+          console.log('Resetting refactoring checkbox');
           document.getElementById('refactoringCheckbox').checked = false;
+        } else if (message.command === 'setLanguageInfo') {
+          console.log('Setting language info from message');
+          setLanguageInfo(message.name, message.icon, message.color);
+        } else {
+          console.log('Unknown command:', message.command);
         }
       });
+      
+      console.log('Webview script loaded and ready');
+
+      // Initialize with default values
+      setLanguageInfo('Loading...', 'fas fa-code', '#808080');
+      
+      // Send ready message to extension
+      setTimeout(() => {
+        console.log('Sending ready message to extension');
+        vscode.postMessage({ command: 'webviewReady' });
+      }, 100);
     </script>
   </body>
 </html>

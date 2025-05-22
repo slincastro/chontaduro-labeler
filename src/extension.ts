@@ -16,6 +16,7 @@ import { CommentLineCountMetric } from './metrics/CommentLineCountMetric';
 import { CommentRatioMetric } from './metrics/CommentRatioMetric';
 import { CodeDuplicationMetric } from './metrics/CodeDuplicationMetric';
 import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
+import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -90,6 +91,8 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     return !!this._view;
   }
 
+  private currentLanguageInfo?: LanguageInfo;
+
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
@@ -99,11 +102,26 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.options = { enableScripts: true };
 
     webviewView.webview.onDidReceiveMessage(message => {
+      output.appendLine(`Received message from webview: ${message.command}`);
+      
       if (message.command === 'navigate') {
         this.navigateFile(message.direction);
       } else if (message.command === 'toggleRefactoring') {
         this.needsRefactoring = message.checked;
         output.appendLine(`Refactoring flag set to: ${this.needsRefactoring}`);
+      } else if (message.command === 'webviewReady') {
+        output.appendLine('Webview is ready');
+        
+        // If we have language info stored, send it now
+        if (this.currentLanguageInfo && this._view) {
+          output.appendLine(`Sending language info after webview ready: ${this.currentLanguageInfo.name}`);
+          this._view.webview.postMessage({
+            command: 'setLanguageInfo',
+            name: this.currentLanguageInfo.name,
+            icon: this.currentLanguageInfo.icon,
+            color: this.currentLanguageInfo.color
+          });
+        }
       }
     });
 
@@ -134,6 +152,13 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     const uri = this.csFiles[this.currentIndex];
     vscode.workspace.openTextDocument(uri).then(document => {
       const fileName = uri.fsPath.split('/').pop() || 'Archivo';
+      
+      // Detect language
+      const languageInfo = LanguageDetector.detectLanguage(document);
+      output.appendLine(`Detected language: ${languageInfo.name}`);
+      
+      // Store the current language info
+      this.currentLanguageInfo = languageInfo;
 
       let content = '';
       const metricResults: MetricResult[] = [];
@@ -173,7 +198,21 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       // Get the number of processed files
       const processedFilesCount = this.csvManager.getProcessedFilesCount();
 
+      // Set the HTML content
       this._view!.webview.html = this.getHtmlContent(content, fileName, processedFilesCount);
+      
+      // Send language information to the webview after a small delay to ensure the webview is ready
+      setTimeout(() => {
+        if (this._view) {
+          output.appendLine(`Sending language info: ${languageInfo.name}, ${languageInfo.icon}, ${languageInfo.color}`);
+          this._view.webview.postMessage({
+            command: 'setLanguageInfo',
+            name: languageInfo.name,
+            icon: languageInfo.icon,
+            color: languageInfo.color
+          });
+        }
+      }, 100); // 100ms delay
     });
   }
 
