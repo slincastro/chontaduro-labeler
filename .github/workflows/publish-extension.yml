@@ -1,0 +1,31 @@
+name: Publish VS Code Extension
+
+on:
+  push:
+    tags:
+      - 'v*'  # Solo se activa en tags como v0.0.1, v1.2.3, etc.
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile extension
+        run: npm run compile
+
+      - name: Publish to VS Code Marketplace
+        run: vsce publish -p ${{ secrets.VSCE_TOKEN }}
