@@ -8,6 +8,7 @@ import { LoopCountMetric } from './metrics/LoopCountMetric';
 import { LambdaCountMetric } from './metrics/LambdaCountMetric';
 import { MethodCountMetric } from './metrics/MethodCountMetric';
 import { AverageMethodSizeMetric } from './metrics/AverageMethodSizeMetric';
+import { MethodCohesionMetric } from './metrics/MethodCohesionMetric';
 
 
 const output = vscode.window.createOutputChannel("LineCounter");
@@ -21,6 +22,7 @@ const metricExtractors: MetricExtractor[] = [
   LambdaCountMetric,
   MethodCountMetric,
   AverageMethodSizeMetric,
+  MethodCohesionMetric,
 ];
 
 export function activate(context: vscode.ExtensionContext) {
@@ -34,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('lineCounterView', provider)
   );
-  output.appendLine("✅ Proveedor de webview registrado");
+  output.appendLine(" Proveedor de webview registrado");
 
   context.subscriptions.push(
     vscode.commands.registerCommand('lineCounterView.focus', () => {
@@ -107,7 +109,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         <body style="font-family: sans-serif; padding: 1em;">
           <h3 style="color: #007acc;">Analizando ${title} </h3>
           <p>${content}</p>
-          <p style="color: #888;">Powered by Goku!!</p>
+          <p style="color: #888;">Powered by ReFactorial !!</p>
         </body>
       </html>
     `;
