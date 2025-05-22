@@ -170,7 +170,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         content += `<strong>${result.value}</strong> ${result.label}.<br/>`;
       }
 
-      this._view!.webview.html = this.getHtmlContent(content, fileName);
+      // Get the number of processed files
+      const processedFilesCount = this.csvManager.getProcessedFilesCount();
+
+      this._view!.webview.html = this.getHtmlContent(content, fileName, processedFilesCount);
     });
   }
 
@@ -211,50 +214,16 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     this.update();
   }
 
-  private getHtmlContent(content: string, title: string): string {
-    return `
-      <!DOCTYPE html>
-      <html lang="es">
-      <body style="font-family: sans-serif; padding: 1em;">
-        <div style="margin-top: 1em;">
-          <button onclick="navigate('prev')">⏮️ Anterior</button>
-          <button onclick="navigate('next')">⏭️ Siguiente</button>
-        </div>
-
-        <h3 style="color: #007acc;">Analizando ${title}</h3>
-        <p>${content}</p>
-
-        <div style="margin-top: 1em; display: flex; align-items: center;">
-          <input type="checkbox" id="refactoringCheckbox" onchange="toggleRefactoring(this.checked)">
-          <label for="refactoringCheckbox" style="margin-left: 0.5em;">Debe refactorizarse</label>
-        </div>
-
-        <p style="color: #888; margin-top: 2em;">Powered by ReFactorial !!</p>
-
-        <script>
-          const vscode = acquireVsCodeApi();
-          
-          function navigate(direction) {
-            vscode.postMessage({ command: 'navigate', direction });
-          }
-          
-          function toggleRefactoring(checked) {
-            vscode.postMessage({ 
-              command: 'toggleRefactoring', 
-              checked: checked 
-            });
-          }
-          
-          // Listen for messages from the extension
-          window.addEventListener('message', event => {
-            const message = event.data;
-            if (message.command === 'resetRefactoringCheckbox') {
-              document.getElementById('refactoringCheckbox').checked = false;
-            }
-          });
-        </script>
-      </body>
-      </html>
-    `;
+  private getHtmlContent(content: string, title: string, processedFilesCount: number = 0): string {
+    // Read the HTML template file
+    const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'webview', 'lineCountView.html');
+    let html = fs.readFileSync(htmlPath, 'utf8');
+    
+    // Replace placeholders with dynamic content
+    html = html.replace('${title}', title);
+    html = html.replace('${processedFilesCount}', processedFilesCount.toString());
+    html = html.replace('${content}', content);
+    
+    return html;
   }
 }

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Refactorial</title>
+    <!-- Font Awesome CDN (gratuito) -->
+    <script src="https://kit.fontawesome.com/6a2b987c6b.js" crossorigin="anonymous"></script>
+    <style>
+      .nav-buttons {
+        margin-top: 1.5em;
+        display: flex;
+        gap: 1em;
+        justify-content: center;
+      }
+
+      .nav-buttons button {
+        background-color: #2c3e50;
+        color: white;
+        border: none;
+        padding: 0.75em 1.5em;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        transition: background-color 0.3s ease;
+      }
+
+      .nav-buttons button:hover {
+        background-color: #34495e;
+      }
+
+      .nav-buttons button:active {
+        transform: scale(0.98);
+      }
+
+      .nav-buttons i {
+        font-size: 1.2em;
+      }
+    </style>
+  </head>
+
+  <body style="font-family: sans-serif; padding: 1em;">
+    <div class="nav-buttons">
+      <button onclick="navigate('prev')">
+        <i class="fas fa-backward"></i> <span>Anterior</span>
+      </button>
+      <button onclick="navigate('next')">
+        <i class="fas fa-forward"></i> <span>Siguiente</span>
+      </button>
+    </div>
+
+    <h3>Analizando ${title}</h3>
+
+    <div style="padding: 8px; border-radius: 4px; margin-bottom: 10px;">
+      <strong>Archivos procesados:</strong> ${processedFilesCount}
+    </div>
+
+    <p>${content}</p>
+
+    <div style="margin-top: 1em; display: flex; align-items: center;">
+      <input type="checkbox" id="refactoringCheckbox" onchange="toggleRefactoring(this.checked)">
+      <label for="refactoringCheckbox" style="margin-left: 0.5em;">Debe refactorizarse</label>
+    </div>
+
+    <p style="color: #888; margin-top: 2em;">Powered by ReFactorial !!</p>
+
+    <script>
+      const vscode = acquireVsCodeApi();
+
+      function navigate(direction) {
+        vscode.postMessage({ command: 'navigate', direction });
+      }
+
+      function toggleRefactoring(checked) {
+        vscode.postMessage({
+          command: 'toggleRefactoring',
+          checked: checked
+        });
+      }
+
+      window.addEventListener('message', event => {
+        const message = event.data;
+        if (message.command === 'resetRefactoringCheckbox') {
+          document.getElementById('refactoringCheckbox').checked = false;
+        }
+      });
+    </script>
+  </body>
+</html>

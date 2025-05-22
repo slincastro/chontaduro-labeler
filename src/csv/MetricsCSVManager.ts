@@ -17,6 +17,27 @@ export class MetricsCSVManager {
     }
     
     /**
+     * Gets the number of files processed (number of rows in the CSV file excluding the header)
+     * @returns The number of files processed
+     */
+    public getProcessedFilesCount(): number {
+        if (!this.csvFilePath || !fs.existsSync(this.csvFilePath)) {
+            return 0;
+        }
+        
+        try {
+            const content = fs.readFileSync(this.csvFilePath, 'utf8');
+            const lines = content.split('\n').filter(line => line.trim().length > 0);
+            
+            // Subtract 1 for the header row
+            return Math.max(0, lines.length - 1);
+        } catch (error) {
+            this.output.appendLine(`Error counting processed files: ${error}`);
+            return 0;
+        }
+    }
+    
+    /**
      * Initializes the CSV file with headers if it doesn't exist
      */
     private initializeCSVFile(): void {
