@@ -138,10 +138,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       let content = '';
       const metricResults: MetricResult[] = [];
       
+      // Extract all metrics first
       for (const extractor of metricExtractors) {
         const result = extractor.extract(document);
         metricResults.push(result);
-        content += `<strong>${result.value}</strong> ${result.label}.<br/>`;
         
         // If this is the nesting depth metric and it has a lineNumber, select that line and add decoration
         if (extractor.name === 'nestingDepth' && result.lineNumber !== undefined) {
@@ -161,6 +161,14 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
           }
         }
       }
+      
+      // Sort metrics from highest to lowest value
+      metricResults.sort((a, b) => b.value - a.value);
+      
+      // Generate content with sorted metrics
+      for (const result of metricResults) {
+        content += `<strong>${result.value}</strong> ${result.label}.<br/>`;
+      }
 
       this._view!.webview.html = this.getHtmlContent(content, fileName);
     });
@@ -170,23 +178,19 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private async navigateFile(direction: 'next' | 'prev') {
     if (this.csFiles.length === 0) return;
     
-    // Clear decorations from current editor
     const editor = vscode.window.activeTextEditor;
     if (editor) {
       editor.setDecorations(this.maxDepthDecorationType, []);
     }
 
-    // If direction is 'next', save metrics of the current file before navigating
     if (direction === 'next' && this.currentIndex >= 0 && this.currentIndex < this.csFiles.length) {
       const currentUri = this.csFiles[this.currentIndex];
       try {
         const currentDoc = await vscode.workspace.openTextDocument(currentUri);
         this.csvManager.saveMetricsToCSV(currentDoc, this.needsRefactoring);
         
-        // Reset the refactoring flag after saving
         this.needsRefactoring = false;
         
-        // Update the UI to reflect the reset checkbox
         if (this._view) {
           this._view.webview.postMessage({ command: 'resetRefactoringCheckbox' });
         }
@@ -195,14 +199,12 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       }
     }
 
-    // Update the index for navigation
     if (direction === 'next') {
       this.currentIndex = (this.currentIndex + 1) % this.csFiles.length;
     } else if (direction === 'prev') {
       this.currentIndex = (this.currentIndex - 1 + this.csFiles.length) % this.csFiles.length;
     }
 
-    // Open the new file
     const uri = this.csFiles[this.currentIndex];
     const doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, { preview: false });
