@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { MetricsCSVManager } from './csv/MetricsCSVManager';
 import { LineCountMetric } from './metrics/LineCountMetric';
 import { IfCountMetric } from './metrics/IfCountMetric';
 import { UsingCountMetric } from './metrics/UsingCountMetric';
@@ -28,16 +28,6 @@ const metricExtractors: MetricExtractor[] = [
 
 export function activate(context: vscode.ExtensionContext) {
   output.appendLine("Activando extensión LineCounter");
-  
-  // Ensure metrics directory exists
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-  if (workspaceFolder) {
-    const metricsDir = path.join(workspaceFolder.uri.fsPath, 'metrics-data');
-    if (!fs.existsSync(metricsDir)) {
-      fs.mkdirSync(metricsDir, { recursive: true });
-      output.appendLine(`Created metrics directory: ${metricsDir}`);
-    }
-  }
   
   const provider = new LineCountViewProvider(context.extensionUri);
 
@@ -70,28 +60,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private csFiles: vscode.Uri[] = [];
   private currentIndex: number = 0;
-  private csvFilePath: string | null = null;
+  private csvManager: MetricsCSVManager;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
-    // Initialize CSV file path
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (workspaceFolder) {
-      const metricsDir = path.join(workspaceFolder.uri.fsPath, 'metrics-data');
-      this.csvFilePath = path.join(metricsDir, 'metrics.csv');
-      
-      // Create CSV header if file doesn't exist
-      if (!fs.existsSync(this.csvFilePath)) {
-        const header = ['UUID', 'Timestamp', 'Filename', 'FilePath'];
-        
-        // Add metric names to header
-        metricExtractors.forEach(extractor => {
-          header.push(extractor.name);
-        });
-        
-        fs.writeFileSync(this.csvFilePath, header.join(',') + '\n');
-        output.appendLine(`Created metrics CSV file: ${this.csvFilePath}`);
-      }
-    }
+    // Initialize CSV manager
+    this.csvManager = new MetricsCSVManager(metricExtractors, output);
   }
 
   public get hasView(): boolean {
@@ -147,56 +120,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  /**
-   * Saves the current file's metrics to the CSV file
-   * @param document The document to extract metrics from
-   */
-  private saveMetricsToCSV(document: vscode.TextDocument): void {
-    if (!this.csvFilePath) return;
-
-    try {
-      const uuid = uuidv4();
-      const timestamp = new Date().toISOString();
-      const fileName = document.uri.fsPath.split('/').pop() || 'Unknown';
-      const filePath = document.uri.fsPath;
-      
-      // Extract all metrics
-      const metricValues: number[] = [];
-      for (const extractor of metricExtractors) {
-        const result = extractor.extract(document);
-        metricValues.push(result.value);
-      }
-      
-      // Create CSV row
-      const row = [
-        uuid,
-        timestamp,
-        this.escapeCsvValue(fileName),
-        this.escapeCsvValue(filePath),
-        ...metricValues
-      ];
-      
-      // Append to CSV file
-      fs.appendFileSync(this.csvFilePath, row.join(',') + '\n');
-      output.appendLine(`Metrics saved to CSV for file: ${fileName}`);
-    } catch (error) {
-      output.appendLine(`Error saving metrics to CSV: ${error}`);
-    }
-  }
-  
-  /**
-   * Escapes a value for CSV format
-   * @param value The value to escape
-   * @returns The escaped value
-   */
-  private escapeCsvValue(value: string): string {
-    // If the value contains commas, quotes, or newlines, wrap it in quotes
-    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-      // Double up any quotes
-      return `"${value.replace(/"/g, '""')}"`;
-    }
-    return value;
-  }
 
   private async navigateFile(direction: 'next' | 'prev') {
     if (this.csFiles.length === 0) return;
@@ -206,7 +129,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       const currentUri = this.csFiles[this.currentIndex];
       try {
         const currentDoc = await vscode.workspace.openTextDocument(currentUri);
-        this.saveMetricsToCSV(currentDoc);
+        this.csvManager.saveMetricsToCSV(currentDoc);
       } catch (error) {
         output.appendLine(`Error saving metrics before navigation: ${error}`);
       }
@@ -231,13 +154,13 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       <!DOCTYPE html>
       <html lang="es">
       <body style="font-family: sans-serif; padding: 1em;">
-        <h3 style="color: #007acc;">Analizando ${title}</h3>
-        <p>${content}</p>
-
         <div style="margin-top: 1em;">
           <button onclick="navigate('prev')">⏮️ Anterior</button>
           <button onclick="navigate('next')">⏭️ Siguiente</button>
         </div>
+
+        <h3 style="color: #007acc;">Analizando ${title}</h3>
+        <p>${content}</p>
 
         <p style="color: #888; margin-top: 2em;">Powered by ReFactorial !!</p>
 
