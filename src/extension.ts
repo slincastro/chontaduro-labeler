@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { LineCountMetric } from './metrics/LineCountMetric';
 import { IfCountMetric } from './metrics/IfCountMetric';
 import { UsingCountMetric } from './metrics/UsingCountMetric';
@@ -7,7 +10,7 @@ import { LambdaCountMetric } from './metrics/LambdaCountMetric';
 import { MethodCountMetric } from './metrics/MethodCountMetric';
 import { AverageMethodSizeMetric } from './metrics/AverageMethodSizeMetric';
 import { MethodCohesionMetric } from './metrics/MethodCohesionMetric';
-import { MetricExtractor } from './metrics/MetricExtractor';
+import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -25,6 +28,17 @@ const metricExtractors: MetricExtractor[] = [
 
 export function activate(context: vscode.ExtensionContext) {
   output.appendLine("Activando extensión LineCounter");
+  
+  // Ensure metrics directory exists
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (workspaceFolder) {
+    const metricsDir = path.join(workspaceFolder.uri.fsPath, 'metrics-data');
+    if (!fs.existsSync(metricsDir)) {
+      fs.mkdirSync(metricsDir, { recursive: true });
+      output.appendLine(`Created metrics directory: ${metricsDir}`);
+    }
+  }
+  
   const provider = new LineCountViewProvider(context.extensionUri);
 
   context.subscriptions.push(
@@ -56,8 +70,29 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private csFiles: vscode.Uri[] = [];
   private currentIndex: number = 0;
+  private csvFilePath: string | null = null;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) {
+    // Initialize CSV file path
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (workspaceFolder) {
+      const metricsDir = path.join(workspaceFolder.uri.fsPath, 'metrics-data');
+      this.csvFilePath = path.join(metricsDir, 'metrics.csv');
+      
+      // Create CSV header if file doesn't exist
+      if (!fs.existsSync(this.csvFilePath)) {
+        const header = ['UUID', 'Timestamp', 'Filename', 'FilePath'];
+        
+        // Add metric names to header
+        metricExtractors.forEach(extractor => {
+          header.push(extractor.name);
+        });
+        
+        fs.writeFileSync(this.csvFilePath, header.join(',') + '\n');
+        output.appendLine(`Created metrics CSV file: ${this.csvFilePath}`);
+      }
+    }
+  }
 
   public get hasView(): boolean {
     return !!this._view;
@@ -100,8 +135,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       const fileName = uri.fsPath.split('/').pop() || 'Archivo';
 
       let content = '';
+      const metricResults: MetricResult[] = [];
+      
       for (const extractor of metricExtractors) {
         const result = extractor.extract(document);
+        metricResults.push(result);
         content += `<strong>${result.value}</strong> ${result.label}.<br/>`;
       }
 
@@ -109,15 +147,79 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  /**
+   * Saves the current file's metrics to the CSV file
+   * @param document The document to extract metrics from
+   */
+  private saveMetricsToCSV(document: vscode.TextDocument): void {
+    if (!this.csvFilePath) return;
+
+    try {
+      const uuid = uuidv4();
+      const timestamp = new Date().toISOString();
+      const fileName = document.uri.fsPath.split('/').pop() || 'Unknown';
+      const filePath = document.uri.fsPath;
+      
+      // Extract all metrics
+      const metricValues: number[] = [];
+      for (const extractor of metricExtractors) {
+        const result = extractor.extract(document);
+        metricValues.push(result.value);
+      }
+      
+      // Create CSV row
+      const row = [
+        uuid,
+        timestamp,
+        this.escapeCsvValue(fileName),
+        this.escapeCsvValue(filePath),
+        ...metricValues
+      ];
+      
+      // Append to CSV file
+      fs.appendFileSync(this.csvFilePath, row.join(',') + '\n');
+      output.appendLine(`Metrics saved to CSV for file: ${fileName}`);
+    } catch (error) {
+      output.appendLine(`Error saving metrics to CSV: ${error}`);
+    }
+  }
+  
+  /**
+   * Escapes a value for CSV format
+   * @param value The value to escape
+   * @returns The escaped value
+   */
+  private escapeCsvValue(value: string): string {
+    // If the value contains commas, quotes, or newlines, wrap it in quotes
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+      // Double up any quotes
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  }
+
   private async navigateFile(direction: 'next' | 'prev') {
     if (this.csFiles.length === 0) return;
 
+    // If direction is 'next', save metrics of the current file before navigating
+    if (direction === 'next' && this.currentIndex >= 0 && this.currentIndex < this.csFiles.length) {
+      const currentUri = this.csFiles[this.currentIndex];
+      try {
+        const currentDoc = await vscode.workspace.openTextDocument(currentUri);
+        this.saveMetricsToCSV(currentDoc);
+      } catch (error) {
+        output.appendLine(`Error saving metrics before navigation: ${error}`);
+      }
+    }
+
+    // Update the index for navigation
     if (direction === 'next') {
       this.currentIndex = (this.currentIndex + 1) % this.csFiles.length;
     } else if (direction === 'prev') {
       this.currentIndex = (this.currentIndex - 1 + this.csFiles.length) % this.csFiles.length;
     }
 
+    // Open the new file
     const uri = this.csFiles[this.currentIndex];
     const doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc, { preview: false });
