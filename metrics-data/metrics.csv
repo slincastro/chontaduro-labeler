@@ -1,0 +1,1 @@
+UUID,Timestamp,LabelingDateTime,Filename,FilePath,Language,NeedsRefactoring,lineCount,ifCount,usingCount,loopCount,lambdaCount,methodCount,averageMethodSize,methodCohesion,nestingDepth,commentLineCount,commentRatio,codeDuplication

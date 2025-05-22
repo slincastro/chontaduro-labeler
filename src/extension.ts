@@ -17,6 +17,7 @@ import { CommentRatioMetric } from './metrics/CommentRatioMetric';
 import { CodeDuplicationMetric } from './metrics/CodeDuplicationMetric';
 import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
+import { Webview } from './webview/view';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -287,13 +288,16 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
   private getHtmlContent(content: string, title: string, processedFilesCount: number = 0): string {
-    const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'webview', 'lineCountView.html');
-    let html = fs.readFileSync(htmlPath, 'utf8');
-    
-    html = html.replace('${title}', title);
-    html = html.replace('${processedFilesCount}', processedFilesCount.toString());
-    html = html.replace('${content}', content);
+    //const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'webview', 'lineCountView.html');
+    //let html = fs.readFileSync(htmlPath, 'utf8');
+    const webview = new Webview();
+    let html = webview.getHtml(title, processedFilesCount, content);
+
+    //html = html.replace('${title}', title);
+    //html = html.replace('${processedFilesCount}', processedFilesCount.toString());
+    //html = html.replace('${content}', content);
     
     return html;
   }
+  
 }

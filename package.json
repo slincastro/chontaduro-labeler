@@ -4,6 +4,7 @@
   "publisher": "slincastro",
   "description": "Extension to count lines of the active file and display it in a custom sidebar view",
   "version": "0.0.2",
+  "icon": "media/chontaduro.png",
   "engines": {
     "vscode": "^1.80.0"
   },
