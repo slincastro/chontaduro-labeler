@@ -95,7 +95,7 @@ public getHtml(title: string, processedFilesCount: number, content: string): str
             .metrics-table td:first-child {
               font-weight: bold;
               text-align: center;
-              width: 80px;
+              width: 30px;
             }
           </style>
         </head>
