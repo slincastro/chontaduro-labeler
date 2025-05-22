@@ -33,7 +33,7 @@ export class MetricsCSVManager {
             
             // Create CSV header if file doesn't exist
             if (!fs.existsSync(this.csvFilePath)) {
-                const header = ['UUID', 'Timestamp', 'Filename', 'FilePath'];
+                const header = ['UUID', 'Timestamp', 'LabelingDateTime', 'Filename', 'FilePath', 'NeedsRefactoring'];
                 
                 // Add metric names to header
                 this.metricExtractors.forEach(extractor => {
@@ -49,8 +49,9 @@ export class MetricsCSVManager {
     /**
      * Saves the document's metrics to the CSV file
      * @param document The document to extract metrics from
+     * @param needsRefactoring Whether the file needs refactoring (1 for yes, 0 for no)
      */
-    public saveMetricsToCSV(document: vscode.TextDocument): void {
+    public saveMetricsToCSV(document: vscode.TextDocument, needsRefactoring: boolean = false): void {
         if (!this.csvFilePath) return;
 
         try {
@@ -70,8 +71,10 @@ export class MetricsCSVManager {
             const row = [
                 uuid,
                 timestamp,
+                new Date().toLocaleString('en-US', { timeZone: 'America/Guayaquil' }),
                 this.escapeCsvValue(fileName),
                 this.escapeCsvValue(filePath),
+                needsRefactoring ? '1' : '0',
                 ...metricValues
             ];
             
