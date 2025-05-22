@@ -4,7 +4,8 @@ on:
   push:
     tags:
       - 'v*'  # Solo se activa en tags como v0.0.1, v1.2.3, etc.
-
+   workflow_dispatch:
+   
 jobs:
   publish:
     runs-on: ubuntu-latest
