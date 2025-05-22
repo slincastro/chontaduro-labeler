@@ -14,6 +14,7 @@ import { MethodCohesionMetric } from './metrics/MethodCohesionMetric';
 import { NestingDepthMetric } from './metrics/NestingDepthMetric';
 import { CommentLineCountMetric } from './metrics/CommentLineCountMetric';
 import { CommentRatioMetric } from './metrics/CommentRatioMetric';
+import { CodeDuplicationMetric } from './metrics/CodeDuplicationMetric';
 import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
 
 const output = vscode.window.createOutputChannel("LineCounter");
@@ -31,6 +32,7 @@ const metricExtractors: MetricExtractor[] = [
   NestingDepthMetric,
   CommentLineCountMetric,
   CommentRatioMetric,
+  CodeDuplicationMetric,
 ];
 
 export function activate(context: vscode.ExtensionContext) {
