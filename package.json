@@ -12,7 +12,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onLanguage:*",
+    "onLanguage:csharp",
     "onView:lineCounterView"
   ],
   "main": "./out/extension.js",
