@@ -65,5 +65,11 @@
   },
   "dependencies": {
     "uuid": "^11.1.0"
-  }
+  },
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/slincastro/chontaduro-labeler"
+},
+"license": "MIT",
+"keywords": ["vscode", "extension", "lines", "metrics", "sidebar"]
 }
