@@ -122,6 +122,8 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
             color: this.currentLanguageInfo.color
           });
         }
+      } else if (message.command === 'openCsvFile') {
+        this.openCsvFile();
       }
     });
 
@@ -217,6 +219,37 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
 
+  private openCsvFile() {
+    // Get the CSV file path from the manager
+    const csvFilePath = this.getCsvFilePath();
+    
+    if (csvFilePath && fs.existsSync(csvFilePath)) {
+      output.appendLine(`Opening CSV file: ${csvFilePath}`);
+      
+      // Open the CSV file in VS Code
+      vscode.workspace.openTextDocument(csvFilePath).then(doc => {
+        vscode.window.showTextDocument(doc);
+      }, (error: Error) => {
+        output.appendLine(`Error opening CSV file: ${error}`);
+        vscode.window.showErrorMessage(`Failed to open CSV file: ${error.message}`);
+      });
+    } else {
+      output.appendLine('CSV file not found');
+      vscode.window.showWarningMessage('CSV file not found or not yet created.');
+    }
+  }
+  
+  private getCsvFilePath(): string | null {
+    // Access the private csvFilePath from the csvManager
+    // This is a workaround since csvFilePath is private in MetricsCSVManager
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (workspaceFolder) {
+      const metricsDir = path.join(workspaceFolder.uri.fsPath, 'metrics-data');
+      return path.join(metricsDir, 'metrics.csv');
+    }
+    return null;
+  }
+
   private async navigateFile(direction: 'next' | 'prev') {
     if (this.csFiles.length === 0) return;
     
@@ -254,11 +287,9 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
   private getHtmlContent(content: string, title: string, processedFilesCount: number = 0): string {
-    // Read the HTML template file
     const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'webview', 'lineCountView.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
     
-    // Replace placeholders with dynamic content
     html = html.replace('${title}', title);
     html = html.replace('${processedFilesCount}', processedFilesCount.toString());
     html = html.replace('${content}', content);

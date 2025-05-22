@@ -86,8 +86,12 @@
 
     <h3>Analizando ${title}</h3>
 
-    <div style="padding: 8px; border-radius: 4px; margin-bottom: 10px;">
+    <div style="padding: 8px; border-radius: 4px; margin-bottom: 10px; display: flex; align-items: center;">
       <strong>Archivos procesados:</strong> ${processedFilesCount}
+      <button onclick="openCsvFile()" style="margin-left: 10px; background: none; border: none; cursor: pointer; color: #0078d7; display: flex; align-items: center; padding: 2px 5px; border-radius: 4px; font-size: 0.9em;" title="Abrir archivo CSV">
+        <i class="fas fa-file-csv" style="margin-right: 4px;"></i>
+        <span>Abrir CSV</span>
+      </button>
     </div>
 
     <p>${content}</p>
@@ -135,6 +139,12 @@
         vscode.postMessage({
           command: 'toggleRefactoring',
           checked: checked
+        });
+      }
+      
+      function openCsvFile() {
+        vscode.postMessage({
+          command: 'openCsvFile'
         });
       }
 

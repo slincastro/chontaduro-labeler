@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { MetricExtractor, MetricResult } from '../metrics/MetricExtractor';
+import { LanguageDetector } from '../language/LanguageDetector';
 
 export class MetricsCSVManager {
     private csvFilePath: string | null = null;
@@ -54,7 +55,7 @@ export class MetricsCSVManager {
             
             // Create CSV header if file doesn't exist
             if (!fs.existsSync(this.csvFilePath)) {
-                const header = ['UUID', 'Timestamp', 'LabelingDateTime', 'Filename', 'FilePath', 'NeedsRefactoring'];
+                const header = ['UUID', 'Timestamp', 'LabelingDateTime', 'Filename', 'FilePath', 'Language', 'NeedsRefactoring'];
                 
                 // Add metric names to header
                 this.metricExtractors.forEach(extractor => {
@@ -81,6 +82,11 @@ export class MetricsCSVManager {
             const fileName = document.uri.fsPath.split('/').pop() || 'Unknown';
             const filePath = document.uri.fsPath;
             
+            // Detect language
+            const languageInfo = LanguageDetector.detectLanguage(document);
+            const languageName = languageInfo.name;
+            this.output.appendLine(`Detected language for CSV: ${languageName}`);
+            
             // Extract all metrics
             const metricValues: number[] = [];
             for (const extractor of this.metricExtractors) {
@@ -95,6 +101,7 @@ export class MetricsCSVManager {
                 new Date().toLocaleString('en-US', { timeZone: 'America/Guayaquil' }),
                 this.escapeCsvValue(fileName),
                 this.escapeCsvValue(filePath),
+                this.escapeCsvValue(languageName),
                 needsRefactoring ? '1' : '0',
                 ...metricValues
             ];
