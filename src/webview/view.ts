@@ -37,35 +37,6 @@ export class Webview {
             .language-subtitle {
               font-size: 0.9em;
             }
-            .nav-buttons {
-              margin-top: 1.5em;
-              display: flex;
-              gap: 1em;
-              justify-content: center;
-            }
-            .nav-buttons button {
-              background-color: #2c3e50;
-              color: white;
-              border: none;
-              padding: 0.75em 1.5em;
-              border-radius: 8px;
-              font-size: 1rem;
-              font-weight: 500;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              gap: 0.5em;
-              transition: background-color 0.3s ease;
-            }
-            .nav-buttons button:hover {
-              background-color: #34495e;
-            }
-            .nav-buttons button:active {
-              transform: scale(0.98);
-            }
-            .nav-buttons i {
-              font-size: 1.2em;
-            }
             
             /* Styles for metrics table */
             .metrics-table {
@@ -259,15 +230,6 @@ export class Webview {
               <div id="languageNameElement" class="language-name"></div>
               <div class="language-subtitle">Analyzing code metrics</div>
             </div>
-          </div>
-  
-          <div class="nav-buttons">
-            <button onclick="navigate('prev')">
-              <i class="fas fa-backward"></i> <span>Anterior</span>
-            </button>
-            <button onclick="navigate('next')">
-              <i class="fas fa-forward"></i> <span>Siguiente</span>
-            </button>
           </div>
   
           <h3>Analizando ${title}</h3>
