@@ -71,13 +71,30 @@ export function activate(context: vscode.ExtensionContext) {
     });
     
     // Register a command to open settings
-    context.subscriptions.push(
-      vscode.commands.registerCommand('lineCounterView.openSettings', () => {
-        if (provider.hasView) {
-          provider.openSettings();
-        }
-      })
-    );
+  context.subscriptions.push(
+    vscode.commands.registerCommand('lineCounterView.openSettings', () => {
+      if (provider.hasView) {
+        provider.openSettings();
+      }
+    })
+  );
+
+  // Register commands for navigation
+  context.subscriptions.push(
+    vscode.commands.registerCommand('lineCounterView.navigatePrevious', () => {
+      if (provider.hasView) {
+        provider.navigateFile('prev');
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('lineCounterView.navigateNext', () => {
+      if (provider.hasView) {
+        provider.navigateFile('next');
+      }
+    })
+  );
 }
 
 export function deactivate() {}
@@ -369,7 +386,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     return null;
   }
 
-  private async navigateFile(direction: 'next' | 'prev') {
+  public async navigateFile(direction: 'next' | 'prev') {
     if (this.csFiles.length === 0) return;
     
     const editor = vscode.window.activeTextEditor;

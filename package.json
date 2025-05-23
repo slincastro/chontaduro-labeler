@@ -47,14 +47,34 @@
         "command": "lineCounterView.openSettings",
         "title": "Open Settings",
         "icon": "$(gear)"
+      },
+      {
+        "command": "lineCounterView.navigatePrevious",
+        "title": "Anterior",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "lineCounterView.navigateNext",
+        "title": "Siguiente",
+        "icon": "$(arrow-right)"
       }
     ],
     "menus": {
       "view/title": [
         {
+          "command": "lineCounterView.navigatePrevious",
+          "when": "view == lineCounterView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "lineCounterView.navigateNext",
+          "when": "view == lineCounterView",
+          "group": "navigation@2"
+        },
+        {
           "command": "lineCounterView.openSettings",
           "when": "view == lineCounterView",
-          "group": "navigation"
+          "group": "navigation@3"
         }
       ]
     }
