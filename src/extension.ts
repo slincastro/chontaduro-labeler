@@ -21,6 +21,8 @@ import { ObjectTypeMetric } from './metrics/ObjectTypeMetric';
 import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { Webview } from './webview/view';
+import { ConstructorCountMetric } from './metrics/ConstructorCountMetric';
+import { InterfaceConstructorParameterCountMetric } from './metrics/InterfaceConstructorParameterCountMetric';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -41,6 +43,8 @@ const metricExtractors: MetricExtractor[] = [
   CodeDuplicationMetric,
   GetterSetterCountMetric,
   ObjectTypeMetric,
+  ConstructorCountMetric,
+  InterfaceConstructorParameterCountMetric
 ];
 
 export function activate(context: vscode.ExtensionContext) {

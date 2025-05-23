@@ -45,7 +45,7 @@ export const ObjectTypeMetric: MetricExtractor = {
     }
     
     // Format the dominant type for display
-    const formattedType = "tipo : " + dominantType.charAt(0).toUpperCase() + dominantType.slice(1);
+    const formattedType = dominantType.charAt(0).toUpperCase() + dominantType.slice(1);
     
     // Map object types to numeric codes
     const typeCodeMap: Record<string, number> = {

@@ -7,7 +7,7 @@ export const AverageMethodSizeMetric: MetricExtractor = {
     const text = document.getText();
     const lines = text.split('\n');
 
-    const methodSignatureRegex = /^\s*(public|private|protected|internal)?\s*(static|virtual|override|async|new)?\s+[\w<>\[\],]+\s+\w+\s*\([^)]*\)\s*$/;
+    const methodSignatureRegex = /^\s*(public|private|protected|internal)?\s*(static|virtual|override|async|new)?\s+[\w<>\[\],\s]+\s+\w+(?:<[\w,\s<>]+>)?\s*\([^)]*\)(?:\s+where\s+[\w\s:,]+)?\s*$/;
 
     let methodSizes: number[] = [];
     let insideMethod = false;
