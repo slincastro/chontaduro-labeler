@@ -17,6 +17,7 @@ import { CommentLineCountMetric } from './metrics/CommentLineCountMetric';
 import { CommentRatioMetric } from './metrics/CommentRatioMetric';
 import { CodeDuplicationMetric } from './metrics/CodeDuplicationMetric';
 import { GetterSetterCountMetric } from './metrics/GetterSetterCountMetric';
+import { ObjectTypeMetric } from './metrics/ObjectTypeMetric';
 import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { Webview } from './webview/view';
@@ -39,6 +40,7 @@ const metricExtractors: MetricExtractor[] = [
   CommentRatioMetric,
   CodeDuplicationMetric,
   GetterSetterCountMetric,
+  ObjectTypeMetric,
 ];
 
 export function activate(context: vscode.ExtensionContext) {
@@ -87,7 +89,15 @@ function getMetricDescription(label: string): string {
     'Líneas de comentarios': 'el número total de líneas de comentarios en el código.',
     'Ratio de comentarios': 'la proporción de líneas de comentarios respecto al total de líneas de código.',
     'Duplicación de código': 'la cantidad de código duplicado detectado en el archivo.',
-    'Getters y Setters': 'el número total de métodos getter y setter en el código.'
+    'Getters y Setters': 'el número total de métodos getter y setter en el código.',
+    'Class': 'el tipo de objeto predominante en el archivo es una clase.',
+    'Interface': 'el tipo de objeto predominante en el archivo es una interfaz.',
+    'Enum': 'el tipo de objeto predominante en el archivo es una enumeración.',
+    'Struct': 'el tipo de objeto predominante en el archivo es una estructura.',
+    'Record': 'el tipo de objeto predominante en el archivo es un record.',
+    'Namespace': 'el tipo de objeto predominante en el archivo es un namespace.',
+    'Delegate': 'el tipo de objeto predominante en el archivo es un delegado.',
+    'Tipo de Objeto': 'el tipo de objeto predominante en el archivo.'
   };
 
   return descriptions[label] || 'información sobre la calidad del código.';
