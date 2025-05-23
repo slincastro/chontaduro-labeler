@@ -1,13 +1,11 @@
 import * as vscode from 'vscode';
 
 export class Webview {
-  // Helper method to get webview URI
   private getWebviewUri(webview: vscode.Webview, extensionUri: vscode.Uri, path: string): string {
     return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, path)).toString();
   }
 
   public getHtml(title: string, processedFilesCount: number, content: string, extensionUri: vscode.Uri, webview: vscode.Webview): string {
-    // Get the path to the settings icon
     const settingsIconUri = this.getWebviewUri(webview, extensionUri, 'media/settings-icon.svg');
     
     return `
@@ -263,10 +261,7 @@ export class Webview {
               <div id="fileNameElement" class="file-name">${title}</div>
             </div>
           </div>
-          
-  
-          <p>${content}</p>
-  
+
           <div style="margin-top: 1em; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
               <input type="checkbox" id="refactoringCheckbox" onchange="toggleRefactoring(this.checked)">
@@ -274,6 +269,9 @@ export class Webview {
             </div>
 
           </div>
+          
+  
+          <p>${content}</p>
 
           <div style="padding: 4px; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center;">
             <strong>Archivos procesados:</strong> ${processedFilesCount}
