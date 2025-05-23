@@ -7,29 +7,30 @@ export const MethodCohesionMetric: MetricExtractor = {
     const text = document.getText();
     const lines = text.split('\n');
 
-    // Paso 1: Detectar campos de clase (propiedades)
-    const classPropertiesRegex = /^\s*(public|private|protected|internal)?\s*(static)?\s*[\w<>\[\],]+\s+(\w+)\s*\{?\s*get;?\s*set;?\s*\}?;?$/gm;
+    // Paso 1: Detectar propiedades de clase
+    const classPropertiesRegex = /^\s*(public|private|protected|internal)?\s*(static)?\s*[\w<>\[\],]+\s+(\w+)\s*\{?\s*get;?\s*set;?\s*\}?;?/gm;
     const classProperties = Array.from(text.matchAll(classPropertiesRegex)).map(match => match[3]);
-    const totalProperties = classProperties.length;
 
+    const totalProperties = classProperties.length;
     if (totalProperties === 0) {
       return {
-        label: 'Cohesión promedio de métodos',
+        label: 'Cohesión promedio de métodos (%)',
         value: 0,
       };
     }
 
-    // Paso 2: Extraer métodos con sus cuerpos
-    const methodRegex = /^\s*(public|private|protected|internal)?\s*(static|virtual|override|async|new)?\s+[\w<>\[\],]+\s+(\w+)\s*\([^)]*\)\s*$/;
+    // Paso 2: Detectar métodos
+    const methodRegex = /^\s*(public|private|protected|internal)?\s*(static|virtual|override|async|new)?\s+[\w<>\[\],]+\s+(\w+)\s*\([^)]*\)\s*{?/;
     let insideMethod = false;
     let braceCount = 0;
     let currentMethodBody: string[] = [];
     let methodsCohesion: number[] = [];
 
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+      const line = lines[i].trim();
 
-      if (!insideMethod && methodRegex.test(line.trim())) {
+      // Detectar inicio de método
+      if (!insideMethod && methodRegex.test(line)) {
         let j = i;
         while (j < lines.length && !lines[j].includes('{')) {
           j++;
@@ -41,15 +42,21 @@ export const MethodCohesionMetric: MetricExtractor = {
           currentMethodBody = [];
           currentMethodBody.push(lines[j]);
           i = j;
+          continue;
         }
-      } else if (insideMethod) {
+      }
+
+      // Recolectar cuerpo del método
+      if (insideMethod) {
         braceCount += (line.match(/{/g) || []).length;
         braceCount -= (line.match(/}/g) || []).length;
-        currentMethodBody.push(line);
+        currentMethodBody.push(lines[i]);
 
         if (braceCount === 0) {
           const bodyText = currentMethodBody.join('\n');
-          const usedProperties = classProperties.filter(prop => bodyText.includes(prop));
+          const usedProperties = classProperties.filter(prop =>
+            new RegExp(`\\b${prop}\\b`).test(bodyText)
+          );
           const cohesion = usedProperties.length / totalProperties;
           methodsCohesion.push(cohesion);
           insideMethod = false;
