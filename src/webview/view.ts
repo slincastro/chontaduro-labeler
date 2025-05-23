@@ -287,9 +287,7 @@ export class Webview {
               <input type="checkbox" id="refactoringCheckbox" onchange="toggleRefactoring(this.checked)">
               <label for="refactoringCheckbox" style="margin-left: 0.5em;">Debe refactorizarse</label>
             </div>
-            <button onclick="openSettings()" style="background-color: #2c3e50; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
-              Abrir Configuración
-            </button>
+
           </div>
   
           <p style="color: #888; margin-top: 2em;">Powered by ReFactorial !!</p>
@@ -426,6 +424,9 @@ export class Webview {
                   document.getElementById('apiKey').value = message.settings.apiKey || '';
                   document.getElementById('model').value = message.settings.model || 'gpt-3.5-turbo';
                 }
+              } else if (message.command === 'openSettings') {
+                // Handle the openSettings command from the extension
+                openSettings();
               }
             });
   
