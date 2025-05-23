@@ -12,7 +12,7 @@ Línea 3`;
     const result = LineCountMetric.extract(doc);
 
     assert.strictEqual(result.label, 'Líneas');
-    assert.strictEqual(result.value, 3); /
+    assert.strictEqual(result.value, 3); 
   });
 
   test('Debe retornar 0 para un documento vacío', async () => {
