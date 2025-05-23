@@ -9,6 +9,7 @@ import { UsingCountMetric } from './metrics/UsingCountMetric';
 import { LoopCountMetric } from './metrics/LoopCountMetric';
 import { LambdaCountMetric } from './metrics/LambdaCountMetric';
 import { MethodCountMetric } from './metrics/MethodCountMetric';
+import { ClassCountMetric } from './metrics/ClassCountMetric';
 import { AverageMethodSizeMetric } from './metrics/AverageMethodSizeMetric';
 import { MethodCohesionMetric } from './metrics/MethodCohesionMetric';
 import { NestingDepthMetric } from './metrics/NestingDepthMetric';
@@ -29,6 +30,7 @@ const metricExtractors: MetricExtractor[] = [
   LoopCountMetric,
   LambdaCountMetric,
   MethodCountMetric,
+  ClassCountMetric,
   AverageMethodSizeMetric,
   MethodCohesionMetric,
   NestingDepthMetric,
@@ -76,6 +78,7 @@ function getMetricDescription(label: string): string {
     'Cantidad de bucles': 'el número de estructuras de bucle (for, while, foreach) en el código.',
     'Cantidad de lambdas': 'el número de expresiones lambda en el código.',
     'Cantidad de métodos': 'el número total de métodos definidos en el código.',
+    'Clases': 'el número total de clases definidas en el archivo.',
     'Tamaño promedio de métodos': 'el número promedio de líneas por método en el código.',
     'Cohesión de métodos': 'qué tan bien los métodos están relacionados entre sí.',
     'Profundidad de anidamiento': 'el nivel máximo de anidamiento de bloques de código.',
