@@ -97,6 +97,47 @@ public getHtml(title: string, processedFilesCount: number, content: string): str
               text-align: center;
               width: 30px;
             }
+            
+            /* Collapsible metrics styles */
+            .collapsible {
+              cursor: pointer;
+              padding: 10px 15px;
+              width: 100%;
+              border: none;
+              text-align: left;
+              outline: none;
+              font-size: 1em;
+              background-color: #f1f1f1;
+              border-radius: 8px;
+              margin-bottom: 5px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            
+            .collapsible:hover {
+              background-color: #e0e0e0;
+            }
+            
+            .collapsible-content {
+              padding: 0;
+              max-height: 0;
+              overflow: hidden;
+              transition: max-height 0.2s ease-out;
+              background-color: white;
+              border-radius: 0 0 8px 8px;
+            }
+            
+            .collapsible-dots {
+              display: inline-block;
+              width: 20px;
+              text-align: center;
+            }
+            
+            .metric-value {
+              font-weight: bold;
+              margin-right: 10px;
+            }
           </style>
         </head>
         <body style="font-family: sans-serif; padding: 1em;">
@@ -170,6 +211,29 @@ public getHtml(title: string, processedFilesCount: number, content: string): str
                 command: 'openCsvFile'
               });
             }
+            
+            function toggleCollapsible(element) {
+              element.classList.toggle("active");
+              const content = element.nextElementSibling;
+              
+              if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                element.querySelector('.collapsible-dots').textContent = "...";
+              } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                element.querySelector('.collapsible-dots').textContent = "▼";
+              }
+            }
+            
+            // Initialize all collapsible elements after the page loads
+            document.addEventListener('DOMContentLoaded', function() {
+              const collapsibles = document.getElementsByClassName("collapsible");
+              for (let i = 0; i < collapsibles.length; i++) {
+                collapsibles[i].addEventListener("click", function() {
+                  toggleCollapsible(this);
+                });
+              }
+            });
   
             window.addEventListener('message', event => {
               const message = event.data;

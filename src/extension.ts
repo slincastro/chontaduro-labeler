@@ -67,6 +67,26 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
+// Helper function to get descriptions for metrics
+function getMetricDescription(label: string): string {
+  const descriptions: Record<string, string> = {
+    'Líneas de código': 'el número total de líneas de código en el archivo.',
+    'Cantidad de ifs': 'el número de declaraciones condicionales (if) en el código.',
+    'Cantidad de usings': 'el número de declaraciones using en el código.',
+    'Cantidad de bucles': 'el número de estructuras de bucle (for, while, foreach) en el código.',
+    'Cantidad de lambdas': 'el número de expresiones lambda en el código.',
+    'Cantidad de métodos': 'el número total de métodos definidos en el código.',
+    'Tamaño promedio de métodos': 'el número promedio de líneas por método en el código.',
+    'Cohesión de métodos': 'qué tan bien los métodos están relacionados entre sí.',
+    'Profundidad de anidamiento': 'el nivel máximo de anidamiento de bloques de código.',
+    'Líneas de comentarios': 'el número total de líneas de comentarios en el código.',
+    'Ratio de comentarios': 'la proporción de líneas de comentarios respecto al total de líneas de código.',
+    'Duplicación de código': 'la cantidad de código duplicado detectado en el archivo.'
+  };
+
+  return descriptions[label] || 'información sobre la calidad del código.';
+}
+
 class LineCountViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private csFiles: vscode.Uri[] = [];
@@ -190,17 +210,82 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         }
       }
       
-      // Sort metrics from highest to lowest value
-      metricResults.sort((a, b) => b.value - a.value);
+      // Filter out metrics with value 0 and sort from highest to lowest value
+      const nonZeroMetrics = metricResults.filter(result => result.value !== 0);
+      nonZeroMetrics.sort((a, b) => b.value - a.value);
       
-      // Generate content with sorted metrics in a table format
-      content = '<table class="metrics-table">';
+      // Get metrics with value 0
+      const zeroMetrics = metricResults.filter(result => result.value === 0);
+      
+      // Generate content with collapsible sections for non-zero metrics
+      content = '<div class="metrics-container">';
+      
+      if (nonZeroMetrics.length === 0) {
+        content += '<p>No hay métricas con valores diferentes de cero.</p>';
+      } else {
+        for (const result of nonZeroMetrics) {
+          // Create a collapsible button for each metric
+          content += `
+            <button class="collapsible">
+              <div>
+                <span class="metric-value">${result.value}</span>
+                ${result.label}
+              </div>
+              <span class="collapsible-dots">...</span>
+            </button>
+            <div class="collapsible-content">
+              <div style="padding: 15px;">
+                <p><strong>Detalles:</strong></p>
+                <p>Valor: ${result.value}</p>
+                <p>Métrica: ${result.label}</p>
+                ${result.lineNumber !== undefined ? `<p>Línea: ${result.lineNumber + 1}</p>` : ''}
+                <p>Esta métrica indica ${getMetricDescription(result.label)}</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      // Add a collapsible section for metrics with value 0
+      content += `
+        <div style="margin-top: 20px;">
+          <button class="collapsible" style="background-color: #f8f9fa;">
+            <div>
+              <span style="font-weight: bold;">Métricas con valor 0</span>
+            </div>
+            <span class="collapsible-dots">...</span>
+          </button>
+          <div class="collapsible-content">
+            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 0 0 8px 8px;">
+      `;
+      
+      if (zeroMetrics.length === 0) {
+        content += '<p>No hay métricas con valor 0.</p>';
+      } else {
+        content += '<ul style="padding-left: 20px; margin-top: 10px;">';
+        for (const result of zeroMetrics) {
+          content += `<li><strong>${result.label}</strong> - Esta métrica indica ${getMetricDescription(result.label)}</li>`;
+        }
+        content += '</ul>';
+      }
+      
+      content += `
+            </div>
+          </div>
+        </div>
+      </div>
+      `;
+      
+      // Add a hidden table with all metrics for CSV export
+      content += '<div style="display: none;">';
+      content += '<table class="metrics-table">';
       content += '<thead><tr><th>Valor</th><th>Métrica</th></tr></thead>';
       content += '<tbody>';
       for (const result of metricResults) {
         content += `<tr><td><strong>${result.value}</strong></td><td>${result.label}</td></tr>`;
       }
       content += '</tbody></table>';
+      content += '</div>';
 
       // Get the number of processed files
       const processedFilesCount = this.csvManager.getProcessedFilesCount();
