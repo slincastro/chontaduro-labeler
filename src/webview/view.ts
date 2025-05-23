@@ -25,17 +25,47 @@ export class Webview {
               padding: 0.5em;
               border-radius: 8px;
               color: white;
+              flex-wrap: wrap;
+            }
+            .language-circle {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 30px;
+              height: 30px;
+              border-radius: 50%;
+              margin-right: 0.8em;
+              background-color: rgba(255, 255, 255, 0.2);
+              padding: 0 6px;
             }
             .language-icon {
-              font-size: 1.5em;
-              margin-right: 0.5em;
+              font-size: 1.2em;
+              margin-right: 5px;
             }
             .language-name {
               font-weight: bold;
-              font-size: 1.2em;
+              font-size: 0.9em;
+              white-space: nowrap;
+            }
+            .file-name {
+              font-weight: bold;
+              font-size: 1.1em;
+              margin-left: 0.8em;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              max-width: 100%;
+            }
+            .header-container {
+              display: flex;
+              align-items: center;
+              flex-wrap: wrap;
+              width: 100%;
             }
             .language-subtitle {
               font-size: 0.9em;
+              width: 100%;
+              margin-top: 0.3em;
             }
             
             /* Styles for metrics table */
@@ -225,20 +255,15 @@ export class Webview {
         </head>
         <body style="font-family: sans-serif; padding: 1em;">
           <div id="languageInfoContainer" class="language-info">
-            <i id="languageIconElement" class="language-icon"></i>
-            <div>
-              <div id="languageNameElement" class="language-name"></div>
-              <div class="language-subtitle">${title}</div>
+            <div class="header-container">
+              <div class="language-circle">
+                <i id="languageIconElement" class="language-icon"></i>
+                <div id="languageNameElement" class="language-name"></div>
+              </div>
+              <div id="fileNameElement" class="file-name">${title}</div>
             </div>
           </div>
           
-          <div style="padding: 4px; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center;">
-            <strong>Archivos procesados:</strong> ${processedFilesCount}
-            <button onclick="openCsvFile()" style="margin-left: 10px; background: none; border: none; cursor: pointer; color: #0078d7; display: flex; align-items: center; padding: 2px 5px; border-radius: 4px; font-size: 0.9em;" title="Abrir archivo CSV">
-              <i class="fas fa-file-csv" style="margin-right: 4px;"></i>
-              <span>Abrir CSV</span>
-            </button>
-          </div>
   
           <p>${content}</p>
   
@@ -249,7 +274,15 @@ export class Webview {
             </div>
 
           </div>
-  
+
+          <div style="padding: 4px; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center;">
+            <strong>Archivos procesados:</strong> ${processedFilesCount}
+            <button onclick="openCsvFile()" style="margin-left: 10px; background: none; border: none; cursor: pointer; color: #0078d7; display: flex; align-items: center; padding: 2px 5px; border-radius: 4px; font-size: 0.9em;" title="Abrir archivo CSV">
+              <i class="fas fa-file-csv" style="margin-right: 4px;"></i>
+              <span>Abrir CSV</span>
+            </button>
+          </div>
+          
           <p style="color: #888; margin-top: 2em;">Powered by ReFactorial !!</p>
           
           <!-- Settings Panel -->
@@ -283,8 +316,9 @@ export class Webview {
               const container = document.getElementById('languageInfoContainer');
               const iconElement = document.getElementById('languageIconElement');
               const nameElement = document.getElementById('languageNameElement');
+              const fileNameElement = document.getElementById('fileNameElement');
   
-              if (!container || !iconElement || !nameElement) {
+              if (!container || !iconElement || !nameElement || !fileNameElement) {
                 console.error('Could not find language info elements');
                 return;
               }
@@ -292,6 +326,12 @@ export class Webview {
               container.style.backgroundColor = color;
               iconElement.className = icon + ' language-icon';
               nameElement.textContent = name;
+              
+              // Extract filename from title if it exists
+              const titleText = fileNameElement.textContent || '';
+              if (titleText.includes('/')) {
+                fileNameElement.textContent = titleText.split('/').pop();
+              }
             }
   
             function navigate(direction) {
