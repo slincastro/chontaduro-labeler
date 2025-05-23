@@ -254,9 +254,9 @@ export class Webview {
           </style>
         </head>
         <body style="font-family: sans-serif; padding: 1em;">
-          <div id="languageInfoContainer" class="language-info">
+          <div  class="language-info">
             <div class="header-container">
-              <div class="language-circle">
+              <div id="languageInfoContainer" class="language-circle">
                 <i id="languageIconElement" class="language-icon"></i>
                 <div id="languageNameElement" class="language-name"></div>
               </div>
