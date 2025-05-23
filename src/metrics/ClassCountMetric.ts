@@ -7,7 +7,7 @@ export const ClassCountMetric: MetricExtractor = {
     const text = document.getText();
     // Regex to match class declarations in various languages
     // This pattern should work for C#, Java, TypeScript, JavaScript, etc.
-    const regex = /^\s*(public|private|protected|internal|export|abstract|sealed)?\s*(static|final)?\s*class\s+\w+/gm;
+    const regex = /^\s*(public|private|protected|internal|export|abstract|sealed|static|final)?\s*(public|private|protected|internal|export|abstract|sealed|static|final)?\s*(public|private|protected|internal|export|abstract|sealed|static|final)?\s*class\s+\w+/gm;
     const matches = text.match(regex);
     return {
       label: 'Clases',
