@@ -1,5 +1,15 @@
+import * as vscode from 'vscode';
+
 export class Webview {
-public getHtml(title: string, processedFilesCount: number, content: string): string {
+  // Helper method to get webview URI
+  private getWebviewUri(webview: vscode.Webview, extensionUri: vscode.Uri, path: string): string {
+    return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, path)).toString();
+  }
+
+  public getHtml(title: string, processedFilesCount: number, content: string, extensionUri: vscode.Uri, webview: vscode.Webview): string {
+    // Get the path to the settings icon
+    const settingsIconUri = this.getWebviewUri(webview, extensionUri, 'media/settings-icon.svg');
+    
     return `
       <!DOCTYPE html>
       <html lang="es">
@@ -138,6 +148,108 @@ public getHtml(title: string, processedFilesCount: number, content: string): str
               font-weight: bold;
               margin-right: 10px;
             }
+            
+            /* Settings icon styles */
+            .settings-icon {
+              cursor: pointer;
+              font-size: 1.2em;
+              color: white;
+              width: 28px;
+              height: 28px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 50%;
+              background-color: rgba(255, 255, 255, 0.2);
+              transition: background-color 0.3s ease;
+              margin-left: 5px;
+            }
+            
+            .settings-icon:hover {
+              background-color: rgba(255, 255, 255, 0.3);
+            }
+            
+            /* Settings panel styles */
+            .settings-panel {
+              display: none;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background-color: rgba(0, 0, 0, 0.5);
+              z-index: 1000;
+              justify-content: center;
+              align-items: center;
+            }
+            
+            .settings-content {
+              background-color: white;
+              padding: 20px;
+              border-radius: 8px;
+              width: 80%;
+              max-width: 500px;
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+            
+            .settings-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            }
+            
+            .settings-close {
+              cursor: pointer;
+              font-size: 1.5em;
+              color: #888;
+            }
+            
+            .settings-close:hover {
+              color: #333;
+            }
+            
+            .settings-form-group {
+              margin-bottom: 15px;
+            }
+            
+            .settings-label {
+              display: block;
+              margin-bottom: 5px;
+              font-weight: bold;
+            }
+            
+            .settings-input {
+              width: 100%;
+              padding: 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 1em;
+            }
+            
+            .settings-select {
+              width: 100%;
+              padding: 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 1em;
+              background-color: white;
+            }
+            
+            .settings-button {
+              background-color: #2c3e50;
+              color: white;
+              border: none;
+              padding: 10px 15px;
+              border-radius: 4px;
+              font-size: 1em;
+              cursor: pointer;
+              margin-top: 10px;
+            }
+            
+            .settings-button:hover {
+              background-color: #34495e;
+            }
           </style>
         </head>
         <body style="font-family: sans-serif; padding: 1em;">
@@ -170,12 +282,41 @@ public getHtml(title: string, processedFilesCount: number, content: string): str
   
           <p>${content}</p>
   
-          <div style="margin-top: 1em; display: flex; align-items: center;">
-            <input type="checkbox" id="refactoringCheckbox" onchange="toggleRefactoring(this.checked)">
-            <label for="refactoringCheckbox" style="margin-left: 0.5em;">Debe refactorizarse</label>
+          <div style="margin-top: 1em; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <input type="checkbox" id="refactoringCheckbox" onchange="toggleRefactoring(this.checked)">
+              <label for="refactoringCheckbox" style="margin-left: 0.5em;">Debe refactorizarse</label>
+            </div>
+            <button onclick="openSettings()" style="background-color: #2c3e50; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+              Abrir Configuración
+            </button>
           </div>
   
           <p style="color: #888; margin-top: 2em;">Powered by ReFactorial !!</p>
+          
+          <!-- Settings Panel -->
+          <div id="settingsPanel" class="settings-panel">
+            <div class="settings-content">
+              <div class="settings-header">
+                <h3 style="margin: 0;">Configuración de OpenAI</h3>
+                <div class="settings-close" onclick="closeSettings()">×</div>
+              </div>
+              <div class="settings-form-group">
+                <label class="settings-label" for="apiKey">API Key de OpenAI</label>
+                <input type="password" id="apiKey" class="settings-input" placeholder="Ingresa tu API key">
+              </div>
+              <div class="settings-form-group">
+                <label class="settings-label" for="model">Modelo</label>
+                <select id="model" class="settings-select">
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                  <option value="gpt-4o">GPT-4o</option>
+                </select>
+              </div>
+              <button class="settings-button" onclick="saveSettings()">Guardar</button>
+            </div>
+          </div>
   
           <script>
             const vscode = acquireVsCodeApi();
@@ -235,12 +376,56 @@ public getHtml(title: string, processedFilesCount: number, content: string): str
               }
             });
   
+            // Settings panel functions
+            function openSettings() {
+              console.log('openSettings function called in webview');
+              
+              const panel = document.getElementById('settingsPanel');
+              if (!panel) {
+                console.error('Settings panel element not found');
+                return;
+              }
+              
+              console.log('Setting panel display to flex');
+              panel.style.display = 'flex';
+              
+              // Load saved settings if available
+              console.log('Sending getSettings message');
+              vscode.postMessage({ command: 'getSettings' });
+            }
+            
+            function closeSettings() {
+              const panel = document.getElementById('settingsPanel');
+              panel.style.display = 'none';
+            }
+            
+            function saveSettings() {
+              const apiKey = document.getElementById('apiKey').value;
+              const model = document.getElementById('model').value;
+              
+              vscode.postMessage({
+                command: 'saveSettings',
+                settings: {
+                  apiKey,
+                  model
+                }
+              });
+              
+              closeSettings();
+            }
+            
             window.addEventListener('message', event => {
               const message = event.data;
               if (message.command === 'resetRefactoringCheckbox') {
                 document.getElementById('refactoringCheckbox').checked = false;
               } else if (message.command === 'setLanguageInfo') {
                 setLanguageInfo(message.name, message.icon, message.color);
+              } else if (message.command === 'setSettings') {
+                // Fill the settings form with saved values
+                if (message.settings) {
+                  document.getElementById('apiKey').value = message.settings.apiKey || '';
+                  document.getElementById('model').value = message.settings.model || 'gpt-3.5-turbo';
+                }
               }
             });
   

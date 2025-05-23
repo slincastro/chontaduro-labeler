@@ -42,8 +42,22 @@
       {
         "command": "lineCounterView.focus",
         "title": "Show LineCounterView"
+      },
+      {
+        "command": "lineCounterView.openSettings",
+        "title": "Open Settings",
+        "icon": "$(gear)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "lineCounterView.openSettings",
+          "when": "view == lineCounterView",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

@@ -58,17 +58,26 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  vscode.window.onDidChangeActiveTextEditor(() => {
-    if (provider.hasView) {
-      provider.update();
-    }
-  });
+    vscode.window.onDidChangeActiveTextEditor(() => {
+      if (provider.hasView) {
+        provider.update();
+      }
+    });
 
-  vscode.workspace.onDidChangeTextDocument(() => {
-    if (provider.hasView) {
-      provider.update();
-    }
-  });
+    vscode.workspace.onDidChangeTextDocument(() => {
+      if (provider.hasView) {
+        provider.update();
+      }
+    });
+    
+    // Register a command to open settings
+    context.subscriptions.push(
+      vscode.commands.registerCommand('lineCounterView.openSettings', () => {
+        if (provider.hasView) {
+          provider.openSettings();
+        }
+      })
+    );
 }
 
 export function deactivate() {}
@@ -161,6 +170,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         }
       } else if (message.command === 'openCsvFile') {
         this.openCsvFile();
+      } else if (message.command === 'getSettings') {
+        this.sendSettings();
+      } else if (message.command === 'saveSettings') {
+        this.saveSettings(message.settings);
       }
     });
 
@@ -396,13 +409,63 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     //const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'webview', 'lineCountView.html');
     //let html = fs.readFileSync(htmlPath, 'utf8');
     const webview = new Webview();
-    let html = webview.getHtml(title, processedFilesCount, content);
+    
+    // Make sure we have a view before trying to get the webview
+    if (!this._view) {
+      return '';
+    }
+    
+    let html = webview.getHtml(title, processedFilesCount, content, this._extensionUri, this._view.webview);
 
     //html = html.replace('${title}', title);
     //html = html.replace('${processedFilesCount}', processedFilesCount.toString());
     //html = html.replace('${content}', content);
     
     return html;
+  }
+  
+  // Settings methods
+  public openSettings() {
+    output.appendLine('openSettings method called');
+    
+    if (!this._view) {
+      output.appendLine('No view available');
+      return;
+    }
+    
+    // Send a message to the webview to open the settings panel
+    output.appendLine('Sending openSettings message to webview');
+    this._view.webview.postMessage({ command: 'openSettings' });
+  }
+  
+  private sendSettings() {
+    if (!this._view) return;
+    
+    // Get settings from VSCode configuration
+    const config = vscode.workspace.getConfiguration('lineCounter');
+    const apiKey = config.get<string>('openai.apiKey') || '';
+    const model = config.get<string>('openai.model') || 'gpt-3.5-turbo';
+    
+    // Send settings to the webview
+    this._view.webview.postMessage({
+      command: 'setSettings',
+      settings: {
+        apiKey,
+        model
+      }
+    });
+    
+    output.appendLine('Sent settings to webview');
+  }
+  
+  private saveSettings(settings: { apiKey: string, model: string }) {
+    // Save settings to VSCode configuration
+    const config = vscode.workspace.getConfiguration('lineCounter');
+    config.update('openai.apiKey', settings.apiKey, true);
+    config.update('openai.model', settings.model, true);
+    
+    output.appendLine('Saved settings to configuration');
+    vscode.window.showInformationMessage('Configuración de OpenAI guardada correctamente');
   }
   
 }
