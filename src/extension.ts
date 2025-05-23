@@ -16,6 +16,7 @@ import { NestingDepthMetric } from './metrics/NestingDepthMetric';
 import { CommentLineCountMetric } from './metrics/CommentLineCountMetric';
 import { CommentRatioMetric } from './metrics/CommentRatioMetric';
 import { CodeDuplicationMetric } from './metrics/CodeDuplicationMetric';
+import { GetterSetterCountMetric } from './metrics/GetterSetterCountMetric';
 import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { Webview } from './webview/view';
@@ -37,6 +38,7 @@ const metricExtractors: MetricExtractor[] = [
   CommentLineCountMetric,
   CommentRatioMetric,
   CodeDuplicationMetric,
+  GetterSetterCountMetric,
 ];
 
 export function activate(context: vscode.ExtensionContext) {
@@ -84,7 +86,8 @@ function getMetricDescription(label: string): string {
     'Profundidad de anidamiento': 'el nivel máximo de anidamiento de bloques de código.',
     'Líneas de comentarios': 'el número total de líneas de comentarios en el código.',
     'Ratio de comentarios': 'la proporción de líneas de comentarios respecto al total de líneas de código.',
-    'Duplicación de código': 'la cantidad de código duplicado detectado en el archivo.'
+    'Duplicación de código': 'la cantidad de código duplicado detectado en el archivo.',
+    'Getters y Setters': 'el número total de métodos getter y setter en el código.'
   };
 
   return descriptions[label] || 'información sobre la calidad del código.';
