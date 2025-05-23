@@ -61,7 +61,7 @@ export class Webview {
             }
             
             .metrics-table td {
-              padding: 10px 15px;
+              padding: 6px 15px;
               border-bottom: 1px solid #ddd;
             }
             
@@ -82,15 +82,15 @@ export class Webview {
             /* Collapsible metrics styles */
             .collapsible {
               cursor: pointer;
-              padding: 10px 15px;
+              padding: 5px 15px;
               width: 100%;
               border: none;
               text-align: left;
               outline: none;
               font-size: 1em;
               background-color: #f1f1f1;
-              border-radius: 8px;
-              margin-bottom: 5px;
+              border-radius: 4px;
+              margin-bottom: 2px;
               display: flex;
               justify-content: space-between;
               align-items: center;
@@ -228,13 +228,11 @@ export class Webview {
             <i id="languageIconElement" class="language-icon"></i>
             <div>
               <div id="languageNameElement" class="language-name"></div>
-              <div class="language-subtitle">Analyzing code metrics</div>
+              <div class="language-subtitle">${title}</div>
             </div>
           </div>
-  
-          <h3>Analizando ${title}</h3>
-  
-          <div style="padding: 8px; border-radius: 4px; margin-bottom: 10px; display: flex; align-items: center;">
+          
+          <div style="padding: 4px; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center;">
             <strong>Archivos procesados:</strong> ${processedFilesCount}
             <button onclick="openCsvFile()" style="margin-left: 10px; background: none; border: none; cursor: pointer; color: #0078d7; display: flex; align-items: center; padding: 2px 5px; border-radius: 4px; font-size: 0.9em;" title="Abrir archivo CSV">
               <i class="fas fa-file-csv" style="margin-right: 4px;"></i>

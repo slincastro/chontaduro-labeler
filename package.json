@@ -23,7 +23,7 @@
       "activitybar": [
         {
           "id": "lineCounterContainer",
-          "title": "LineCounter",
+          "title": "Chontaduro",
           "icon": "media/icon.svg"
         }
       ]
@@ -33,7 +33,7 @@
         {
           "type": "webview",
           "id": "lineCounterView",
-          "name": "Líneas del archivo",
+          "name": "Metricas Por Archivo",
           "visibility": "visible"
         }
       ]
