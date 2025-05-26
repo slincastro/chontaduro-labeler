@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const GetterSetterCountMetric: MetricExtractor = {
   name: 'getterSetterCount',
+  description: 'el número total de métodos getter y setter en el código.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const LoopCountMetric: MetricExtractor = {
   name: 'loopCount',
+  description: 'el número de estructuras de bucle (for, while, foreach) en el código.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     
@@ -30,7 +31,7 @@ export const LoopCountMetric: MetricExtractor = {
     const forEachMatches = (textWithoutComments.match(forEachRegex) || []).length;
     
     return {
-      label: 'Bucles (for/while/do/forEach)',
+      label: 'Cantidad de bucles',
       value: loopMatches + forEachMatches,
     };
   },

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const CodeDuplicationMetric: MetricExtractor = {
   name: 'codeDuplication',
+  description: 'la cantidad de código duplicado detectado en el archivo.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     const lines = text.split('\n');
@@ -87,7 +88,7 @@ export const CodeDuplicationMetric: MetricExtractor = {
       : 0;
     
     return {
-      label: 'Porcentaje de código duplicado (%)',
+      label: 'Duplicación de código',
       value: Math.round(duplicationPercentage * 100) / 100, // Round to 2 decimal places
     };
   },

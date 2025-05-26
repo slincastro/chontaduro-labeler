@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const ObjectTypeMetric: MetricExtractor = {
   name: 'objectType',
+  description: 'el tipo de objeto predominante en el archivo.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     

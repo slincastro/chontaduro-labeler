@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const IfCountMetric: MetricExtractor = {
   name: 'ifCount',
+  description: 'el número de declaraciones condicionales (if) en el código.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     let ifCount = 0;
@@ -43,7 +44,7 @@ export const IfCountMetric: MetricExtractor = {
     }
     
     return {
-      label: 'Ifs',
+      label: 'Cantidad de ifs',
       value: ifCount,
     };
   },

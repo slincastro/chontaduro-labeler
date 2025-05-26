@@ -23,6 +23,7 @@ import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { Webview } from './webview/view';
 import { ConstructorCountMetric } from './metrics/ConstructorCountMetric';
 import { InterfaceConstructorParameterCountMetric } from './metrics/InterfaceConstructorParameterCountMetric';
+import { SingleResponsibilityMetric } from './metrics/SingleResponsibilityMetric';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -44,7 +45,8 @@ const metricExtractors: MetricExtractor[] = [
   GetterSetterCountMetric,
   ObjectTypeMetric,
   ConstructorCountMetric,
-  InterfaceConstructorParameterCountMetric
+  InterfaceConstructorParameterCountMetric,
+  SingleResponsibilityMetric
 ];
 
 export function activate(context: vscode.ExtensionContext) {
@@ -103,35 +105,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() {}
 
-// Helper function to get descriptions for metrics
-function getMetricDescription(label: string): string {
-  const descriptions: Record<string, string> = {
-    'Líneas de código': 'el número total de líneas de código en el archivo.',
-    'Cantidad de ifs': 'el número de declaraciones condicionales (if) en el código.',
-    'Cantidad de usings': 'el número de declaraciones using en el código.',
-    'Cantidad de bucles': 'el número de estructuras de bucle (for, while, foreach) en el código.',
-    'Cantidad de lambdas': 'el número de expresiones lambda en el código.',
-    'Cantidad de métodos': 'el número total de métodos definidos en el código.',
-    'Clases': 'el número total de clases definidas en el archivo.',
-    'Tamaño promedio de métodos': 'el número promedio de líneas por método en el código.',
-    'Cohesión de métodos': 'qué tan bien los métodos están relacionados entre sí.',
-    'Profundidad de anidamiento': 'el nivel máximo de anidamiento de bloques de código.',
-    'Líneas de comentarios': 'el número total de líneas de comentarios en el código.',
-    'Ratio de comentarios': 'la proporción de líneas de comentarios respecto al total de líneas de código.',
-    'Duplicación de código': 'la cantidad de código duplicado detectado en el archivo.',
-    'Getters y Setters': 'el número total de métodos getter y setter en el código.',
-    'Class': 'el tipo de objeto predominante en el archivo es una clase.',
-    'Interface': 'el tipo de objeto predominante en el archivo es una interfaz.',
-    'Enum': 'el tipo de objeto predominante en el archivo es una enumeración.',
-    'Struct': 'el tipo de objeto predominante en el archivo es una estructura.',
-    'Record': 'el tipo de objeto predominante en el archivo es un record.',
-    'Namespace': 'el tipo de objeto predominante en el archivo es un namespace.',
-    'Delegate': 'el tipo de objeto predominante en el archivo es un delegado.',
-    'Tipo de Objeto': 'el tipo de objeto predominante en el archivo.'
-  };
-
-  return descriptions[label] || 'información sobre la calidad del código.';
-}
 
 class LineCountViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -289,7 +262,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
                 <p>Valor: ${result.value}</p>
                 <p>Métrica: ${result.label}</p>
                 ${result.lineNumber !== undefined ? `<p>Línea: ${result.lineNumber + 1}</p>` : ''}
-                <p>Esta métrica indica ${getMetricDescription(result.label)}</p>
+                <p>Esta métrica indica ${metricExtractors.find(m => {
+                  const extractedResult = m.extract(document);
+                  return extractedResult.label === result.label;
+                })?.description || 'información sobre la calidad del código.'}</p>
               </div>
             </div>
           `;
@@ -314,7 +290,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       } else {
         content += '<ul style="padding-left: 20px; margin-top: 10px;">';
         for (const result of zeroMetrics) {
-          content += `<li><strong>${result.label}</strong> - Esta métrica indica ${getMetricDescription(result.label)}</li>`;
+          content += `<li><strong>${result.label}</strong> - Esta métrica indica ${metricExtractors.find(m => {
+            const extractedResult = m.extract(document);
+            return extractedResult.label === result.label;
+          })?.description || 'información sobre la calidad del código.'}</li>`;
         }
         content += '</ul>';
       }
@@ -360,13 +339,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
 
 
   private openCsvFile() {
-    // Get the CSV file path from the manager
     const csvFilePath = this.getCsvFilePath();
     
     if (csvFilePath && fs.existsSync(csvFilePath)) {
       output.appendLine(`Opening CSV file: ${csvFilePath}`);
       
-      // Open the CSV file in VS Code
       vscode.workspace.openTextDocument(csvFilePath).then(doc => {
         vscode.window.showTextDocument(doc);
       }, (error: Error) => {
@@ -380,8 +357,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
   
   private getCsvFilePath(): string | null {
-    // Access the private csvFilePath from the csvManager
-    // This is a workaround since csvFilePath is private in MetricsCSVManager
+
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (workspaceFolder) {
       const metricsDir = path.join(workspaceFolder.uri.fsPath, 'metrics-data');
@@ -445,7 +421,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     return html;
   }
   
-  // Settings methods
   public openSettings() {
     output.appendLine('openSettings method called');
     
@@ -454,7 +429,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       return;
     }
     
-    // Send a message to the webview to open the settings panel
     output.appendLine('Sending openSettings message to webview');
     this._view.webview.postMessage({ command: 'openSettings' });
   }
@@ -462,12 +436,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private sendSettings() {
     if (!this._view) return;
     
-    // Get settings from VSCode configuration
     const config = vscode.workspace.getConfiguration('lineCounter');
     const apiKey = config.get<string>('openai.apiKey') || '';
     const model = config.get<string>('openai.model') || 'gpt-3.5-turbo';
     
-    // Send settings to the webview
     this._view.webview.postMessage({
       command: 'setSettings',
       settings: {
@@ -480,7 +452,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
   
   private saveSettings(settings: { apiKey: string, model: string }) {
-    // Save settings to VSCode configuration
     const config = vscode.workspace.getConfiguration('lineCounter');
     config.update('openai.apiKey', settings.apiKey, true);
     config.update('openai.model', settings.model, true);

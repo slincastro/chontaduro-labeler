@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const AverageMethodSizeMetric: MetricExtractor = {
   name: 'averageMethodSize',
+  description: 'el número promedio de líneas por método en el código.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     const lines = text.split('\n');

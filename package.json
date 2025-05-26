@@ -77,6 +77,22 @@
           "group": "navigation@3"
         }
       ]
+    },
+    "configuration": {
+      "title": "Chontaduro Labeler",
+      "properties": {
+        "lineCounter.openai.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key para OpenAI"
+        },
+        "lineCounter.openai.model": {
+          "type": "string",
+          "default": "gpt-3.5-turbo",
+          "enum": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
+          "description": "Modelo de OpenAI a utilizar para el análisis"
+        }
+      }
     }
   },
   "scripts": {
@@ -100,12 +116,19 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "openai": "^4.103.0",
     "uuid": "^11.1.0"
   },
   "repository": {
-  "type": "git",
-  "url": "https://github.com/slincastro/chontaduro-labeler"
-},
-"license": "MIT",
-"keywords": ["vscode", "extension", "lines", "metrics", "sidebar"]
+    "type": "git",
+    "url": "https://github.com/slincastro/chontaduro-labeler"
+  },
+  "license": "MIT",
+  "keywords": [
+    "vscode",
+    "extension",
+    "lines",
+    "metrics",
+    "sidebar"
+  ]
 }

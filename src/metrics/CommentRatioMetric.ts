@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const CommentRatioMetric: MetricExtractor = {
   name: 'commentRatio',
+  description: 'la proporción de líneas de comentarios respecto al total de líneas de código.',
   extract(document: vscode.TextDocument): MetricResult {
     const totalLines = document.lineCount;
     let commentLineCount = 0;
@@ -51,7 +52,7 @@ export const CommentRatioMetric: MetricExtractor = {
     const ratio = totalLines > 0 ? (commentLineCount / totalLines) * 100 : 0;
     
     return {
-      label: 'Ratio de comentarios (%)',
+      label: 'Ratio de comentarios',
       value: Math.round(ratio * 100) / 100, // Round to 2 decimal places
     };
   },

@@ -8,5 +8,6 @@ export interface MetricResult {
 
 export interface MetricExtractor {
   name: string;
+  description: string;
   extract(document: vscode.TextDocument): MetricResult;
 }

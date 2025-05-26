@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const InterfaceConstructorParameterCountMetric: MetricExtractor = {
   name: 'interfaceConstructorParameterCount',
+  description: 'el número total de parámetros en constructores de interfaces.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     

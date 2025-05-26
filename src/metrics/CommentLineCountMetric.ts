@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const CommentLineCountMetric: MetricExtractor = {
   name: 'commentLineCount',
+  description: 'el número total de líneas de comentarios en el código.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     let commentLineCount = 0;

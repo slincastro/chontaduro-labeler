@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const MethodCohesionMetric: MetricExtractor = {
   name: 'methodCohesion',
+  description: 'qué tan bien los métodos están relacionados entre sí.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     const lines = text.split('\n');
@@ -14,7 +15,7 @@ export const MethodCohesionMetric: MetricExtractor = {
     const totalProperties = classProperties.length;
     if (totalProperties === 0) {
       return {
-        label: 'Cohesión promedio de métodos (%)',
+        label: 'Cohesión de métodos',
         value: 0,
       };
     }
@@ -69,7 +70,7 @@ export const MethodCohesionMetric: MetricExtractor = {
       : Math.round((methodsCohesion.reduce((acc, val) => acc + val, 0) / methodsCohesion.length) * 100);
 
     return {
-      label: 'Cohesión promedio de métodos (%)',
+      label: 'Cohesión de métodos',
       value: avgCohesion,
     };
   },

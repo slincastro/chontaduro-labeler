@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const ClassCountMetric: MetricExtractor = {
   name: 'classCount',
+  description: 'el número total de clases definidas en el archivo.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     // Regex to match class declarations in various languages

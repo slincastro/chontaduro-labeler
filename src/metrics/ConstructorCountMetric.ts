@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const ConstructorCountMetric: MetricExtractor = {
   name: 'constructorCount',
+  description: 'el número total de constructores definidos en el código.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     

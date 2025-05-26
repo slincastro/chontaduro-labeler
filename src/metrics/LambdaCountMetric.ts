@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 export const LambdaCountMetric: MetricExtractor = {
   name: 'lambdaCount',
+  description: 'el número de expresiones lambda en el código.',
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     let lambdaCount = 0;
@@ -32,7 +33,7 @@ export const LambdaCountMetric: MetricExtractor = {
     }
     
     return {
-      label: 'Expresiones lambda',
+      label: 'Cantidad de lambdas',
       value: lambdaCount,
     };
   },
