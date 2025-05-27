@@ -27,20 +27,26 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
     });
 
     const prompt = `
-    Analiza el siguiente código y determina si cumple con el Principio de Responsabilidad Única (SRP).
-    El Principio de Responsabilidad Única establece que una clase debe tener una sola razón para cambiar, 
-    lo que significa que debe tener una sola responsabilidad o función.
-
-    Código a analizar:
+    Analiza el siguiente archivo de código y evalúa si, en términos generales, **cumple con el Principio de Responsabilidad Única (SRP)**.
+    
+    El Principio de Responsabilidad Única (SRP) indica que un módulo (por ejemplo, una clase o un archivo) debería tener una sola razón para cambiar. Esto significa que todas las funciones o clases dentro del archivo deberían estar relacionadas con una única responsabilidad de negocio o técnica.
+    
+    ### Consideraciones:
+    - Evalúa si las funciones, clases o componentes del archivo contribuyen a una única responsabilidad principal.
+    - No seas excesivamente estricto: en entornos reales es común que existan pequeñas utilidades o funciones auxiliares siempre que estén alineadas con la responsabilidad principal.
+    - Si detectas responsabilidades mezcladas, explica brevemente cuáles son.
+    
+    ### Código a analizar:
     \`\`\`
     ${code}
     \`\`\`
-
-    Responde con un JSON con el siguiente formato:
+    
+    Responde con un JSON en el siguiente formato:
+    
     {
-      "followsSRP": true/false,
-      "explanation": "Explicación detallada de por qué cumple o no con SRP",
-      "suggestions": "Sugerencias para mejorar si no cumple con SRP"
+      "followsSRP": true | false,
+      "explanation": "Explicación razonada de si el archivo mantiene una responsabilidad única, mencionando elementos clave.",
+      "suggestions": "Sugerencias prácticas para mejorar la adherencia al SRP, si aplica. Si cumple, puedes dejar este campo vacío o con 'Ninguna sugerencia'."
     }
     `;
 

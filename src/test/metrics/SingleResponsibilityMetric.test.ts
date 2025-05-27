@@ -1,7 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { SingleResponsibilityMetric } from '../../metrics/SingleResponsibilityMetric';
-import { Metric } from '../../metrics/Metric';
 
 suite('SingleResponsibilityMetric Test Suite', () => {
   test('Debe retornar valor 0 para un documento sin clase', async () => {
