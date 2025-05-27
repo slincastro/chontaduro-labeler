@@ -8,6 +8,9 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
   const code = document.getText();
   const documentUri = document.uri.toString();
   
+  // Start loading spinner
+  vscode.commands.executeCommand('chontaduro.startLoading');
+  
   try {
     const config = vscode.workspace.getConfiguration('lineCounter');
     const apiKey = config.get<string>('openai.apiKey');
@@ -80,6 +83,9 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
   } catch (error: any) {
     vscode.window.showErrorMessage(`Error al analizar SRP: ${error.message}`);
     analysisResults.set(documentUri, 0);
+  } finally {
+    // Stop loading spinner regardless of success or failure
+    vscode.commands.executeCommand('chontaduro.stopLoading');
   }
 }
 

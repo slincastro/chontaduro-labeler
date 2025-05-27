@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { Uri, StatusBarAlignment } from 'vscode';
 import { MetricsCSVManager } from './csv/MetricsCSVManager';
 import { LineCountMetric } from './metrics/LineCountMetric';
 import { IfCountMetric } from './metrics/IfCountMetric';
@@ -28,6 +28,10 @@ import { SingleResponsibilityMetric } from './metrics/SingleResponsibilityMetric
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
 
+// Status bar item
+let statusBarItem: vscode.StatusBarItem;
+let isLoading = false;
+
 const metricExtractors: MetricExtractor[] = [
   LineCountMetric,
   IfCountMetric,
@@ -51,6 +55,17 @@ const metricExtractors: MetricExtractor[] = [
 
 export function activate(context: vscode.ExtensionContext) {
   output.appendLine("Activando extensión LineCounter");
+  
+  // Create status bar item
+  statusBarItem = vscode.window.createStatusBarItem(StatusBarAlignment.Right, 100);
+  statusBarItem.text = "$(symbol-misc)";
+  statusBarItem.tooltip = "Chontaduro Labeler";
+  statusBarItem.command = 'lineCounterView.focus';
+  context.subscriptions.push(statusBarItem);
+  statusBarItem.show();
+
+  // Set the status bar item icon using a built-in VS Code icon
+  statusBarItem.text = "$(symbol-misc)";
   
   const provider = new LineCountViewProvider(context.extensionUri);
 
@@ -84,6 +99,19 @@ export function activate(context: vscode.ExtensionContext) {
       }
     })
   );
+  
+  // Register commands to show/hide loading spinner
+  context.subscriptions.push(
+    vscode.commands.registerCommand('chontaduro.startLoading', () => {
+      startLoading();
+    })
+  );
+  
+  context.subscriptions.push(
+    vscode.commands.registerCommand('chontaduro.stopLoading', () => {
+      stopLoading();
+    })
+  );
 
   // Register commands for navigation
   context.subscriptions.push(
@@ -103,7 +131,27 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-export function deactivate() {}
+export function deactivate() {
+  if (statusBarItem) {
+    statusBarItem.dispose();
+  }
+}
+
+// Function to start loading animation
+export function startLoading() {
+  if (isLoading) {
+    return;
+  }
+  
+  isLoading = true;
+  statusBarItem.text = "$(sync~spin)";
+}
+
+// Function to stop loading animation
+export function stopLoading() {
+  isLoading = false;
+  statusBarItem.text = "$(symbol-misc)";
+}
 
 
 class LineCountViewProvider implements vscode.WebviewViewProvider {
@@ -168,6 +216,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         this.sendSettings();
       } else if (message.command === 'saveSettings') {
         this.saveSettings(message.settings);
+      } else if (message.command === 'startOpenAIRequest') {
+        vscode.commands.executeCommand('chontaduro.startLoading');
+      } else if (message.command === 'endOpenAIRequest') {
+        vscode.commands.executeCommand('chontaduro.stopLoading');
       }
     });
 
