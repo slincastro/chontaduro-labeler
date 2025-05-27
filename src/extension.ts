@@ -87,6 +87,14 @@ export function activate(context: vscode.ExtensionContext) {
       }
     })
   );
+  
+  context.subscriptions.push(
+    vscode.commands.registerCommand('chontaduro.updateAIMetrics', () => {
+      if (provider.hasView) {
+        provider.update();
+      }
+    })
+  );
 }
 
 export function deactivate() {
@@ -174,6 +182,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         vscode.commands.executeCommand('chontaduro.startLoading');
       } else if (message.command === 'endOpenAIRequest') {
         vscode.commands.executeCommand('chontaduro.stopLoading');
+        this.update(); // Update the UI when OpenAI request is complete
       }
     });
 
@@ -235,13 +244,32 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         }
       }
       
-      const nonZeroMetrics = metricResults.filter(result => result.value !== 0);
+      // Separate AI-managed metrics from regular metrics
+      const aiManagedMetrics = metricResults.filter(result => {
+        const metric = metrics.find((m: Metric) => {
+          const extractedResult = m.extract(document);
+          return extractedResult.label === result.label;
+        });
+        return metric?.name === 'singleResponsibility';
+      });
+      
+      // Regular metrics (non-AI managed)
+      const regularMetrics = metricResults.filter(result => {
+        const metric = metrics.find((m: Metric) => {
+          const extractedResult = m.extract(document);
+          return extractedResult.label === result.label;
+        });
+        return metric?.name !== 'singleResponsibility';
+      });
+      
+      const nonZeroMetrics = regularMetrics.filter(result => result.value !== 0);
       nonZeroMetrics.sort((a, b) => b.value - a.value);
       
-      const zeroMetrics = metricResults.filter(result => result.value === 0);
+      const zeroMetrics = regularMetrics.filter(result => result.value === 0);
       
       content = '<div class="metrics-container">';
       
+      // Regular metrics section
       if (nonZeroMetrics.length === 0) {
         content += '<p>No hay métricas con valores diferentes de cero.</p>';
       } else {
@@ -269,6 +297,60 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
           `;
         }
       }
+      
+      // AI-managed metrics section
+      content += `
+        <div style="margin-top: 20px;">
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;">Métricas gestionadas por IA</h3>
+          <div id="ai-metrics-container">
+      `;
+      
+      if (aiManagedMetrics.length === 0) {
+        content += '<p>No hay métricas gestionadas por IA disponibles.</p>';
+      } else {
+        for (const result of aiManagedMetrics) {
+          const metric = metrics.find((m: Metric) => {
+            const extractedResult = m.extract(document);
+            return extractedResult.label === result.label;
+          });
+          
+          const metricIsLoading = isLoading && metric?.name === 'singleResponsibility';
+          
+          if (metricIsLoading) {
+            content += `
+              <div class="ai-metric-loading">
+                <div class="spinner">
+                  <img src="${this._view?.webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'spinner.svg'))}" alt="Loading..." width="24" height="24" />
+                </div>
+                <span>${result.label}</span>
+              </div>
+            `;
+          } else {
+            content += `
+              <button class="collapsible ai-metric">
+                <div>
+                  <span class="metric-value">${result.value}</span>
+                  ${result.label}
+                </div>
+                <span class="collapsible-dots">...</span>
+              </button>
+              <div class="collapsible-content">
+                <div style="padding: 15px;">
+                  <p><strong>Detalles:</strong></p>
+                  <p>Valor: ${result.value}</p>
+                  <p>Métrica: ${result.label}</p>
+                  <p>Esta métrica indica ${metric?.description || 'información sobre la calidad del código.'}</p>
+                </div>
+              </div>
+            `;
+          }
+        }
+      }
+      
+      content += `
+          </div>
+        </div>
+      `;
       
       content += `
         <div style="margin-top: 20px;">

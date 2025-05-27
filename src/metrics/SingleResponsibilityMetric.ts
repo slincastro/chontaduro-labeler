@@ -71,19 +71,23 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
 
     const analysis = JSON.parse(jsonMatch[0]);
     
-    const value = analysis.followsSRP ? 0 : 1; 
+    const value = analysis.followsSRP ? 1 : 0; 
     
     analysisResults.set(documentUri, value);
     
+    // Force UI update after analysis is complete
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor && activeEditor.document.uri.toString() === documentUri) {
       vscode.commands.executeCommand('lineCounterView.focus');
+      
+      // Trigger a UI update by simulating a document change
+      vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
     }
     
     // Show a simple information message with the result
     const message = value === 1 
-      ? `❌ La clase no cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`
-      : `✅ La clase cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`;
+      ? `✅ La clase cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`
+      : `❌ La clase no cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`;
     
     vscode.window.showInformationMessage(message);
   } catch (error: any) {
@@ -92,6 +96,9 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
   } finally {
     // Stop loading spinner regardless of success or failure
     vscode.commands.executeCommand('chontaduro.stopLoading');
+    
+    // Notify the extension that the OpenAI request is complete to update the UI
+    vscode.commands.executeCommand('chontaduro.updateAIMetrics');
   }
 }
 

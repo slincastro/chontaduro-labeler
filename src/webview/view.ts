@@ -249,6 +249,41 @@ export class Webview {
             .settings-button:hover {
               background-color: #34495e;
             }
+            
+            /* AI Metrics section styles */
+            .ai-metric {
+              background-color: #f0f7ff;
+              border-left: 3px solid #0078d7;
+            }
+            
+            .ai-metric:hover {
+              background-color: #e0f0ff;
+            }
+            
+            .ai-metric-loading {
+              display: flex;
+              align-items: center;
+              padding: 10px 15px;
+              background-color: #f0f7ff;
+              border-radius: 4px;
+              margin-bottom: 2px;
+              border-left: 3px solid #0078d7;
+            }
+            
+            .spinner {
+              margin-right: 10px;
+              display: flex;
+              align-items: center;
+            }
+            
+            .spinner img {
+              animation: spin 1.5s linear infinite;
+            }
+            
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
           </style>
         </head>
         <body style="font-family: sans-serif; padding: 1em;">
