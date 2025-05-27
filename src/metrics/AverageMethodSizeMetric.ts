@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const AverageMethodSizeMetric: MetricExtractor = {
+export const AverageMethodSizeMetric: Metric = {
   name: 'averageMethodSize',
   description: 'el número promedio de líneas por método en el código.',
   extract(document: vscode.TextDocument): MetricResult {

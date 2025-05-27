@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const LambdaCountMetric: MetricExtractor = {
+export const LambdaCountMetric: Metric = {
   name: 'lambdaCount',
   description: 'el número de expresiones lambda en el código.',
   extract(document: vscode.TextDocument): MetricResult {
@@ -33,7 +33,7 @@ export const LambdaCountMetric: MetricExtractor = {
     }
     
     return {
-      label: 'Cantidad de lambdas',
+      label: 'Expresiones lambda',
       value: lambdaCount,
     };
   },

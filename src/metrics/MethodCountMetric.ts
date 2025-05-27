@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const MethodCountMetric: MetricExtractor = {
+export const MethodCountMetric: Metric = {
   name: 'methodCount',
   description: 'el número total de métodos definidos en el código.',
   extract(document: vscode.TextDocument): MetricResult {

@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const ConstructorCountMetric: MetricExtractor = {
+export const ConstructorCountMetric: Metric = {
   name: 'constructorCount',
   description: 'el número total de constructores definidos en el código.',
   extract(document: vscode.TextDocument): MetricResult {

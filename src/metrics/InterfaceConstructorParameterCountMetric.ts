@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const InterfaceConstructorParameterCountMetric: MetricExtractor = {
+export const InterfaceConstructorParameterCountMetric: Metric = {
   name: 'interfaceConstructorParameterCount',
   description: 'el número total de parámetros en constructores de interfaces.',
   extract(document: vscode.TextDocument): MetricResult {

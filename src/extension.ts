@@ -3,60 +3,22 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Uri, StatusBarAlignment } from 'vscode';
 import { MetricsCSVManager } from './csv/MetricsCSVManager';
-import { LineCountMetric } from './metrics/LineCountMetric';
-import { IfCountMetric } from './metrics/IfCountMetric';
-import { UsingCountMetric } from './metrics/UsingCountMetric';
-import { LoopCountMetric } from './metrics/LoopCountMetric';
-import { LambdaCountMetric } from './metrics/LambdaCountMetric';
-import { MethodCountMetric } from './metrics/MethodCountMetric';
-import { ClassCountMetric } from './metrics/ClassCountMetric';
-import { AverageMethodSizeMetric } from './metrics/AverageMethodSizeMetric';
-import { MethodCohesionMetric } from './metrics/MethodCohesionMetric';
-import { NestingDepthMetric } from './metrics/NestingDepthMetric';
-import { CommentLineCountMetric } from './metrics/CommentLineCountMetric';
-import { CommentRatioMetric } from './metrics/CommentRatioMetric';
-import { CodeDuplicationMetric } from './metrics/CodeDuplicationMetric';
-import { GetterSetterCountMetric } from './metrics/GetterSetterCountMetric';
-import { ObjectTypeMetric } from './metrics/ObjectTypeMetric';
-import { MetricExtractor, MetricResult } from './metrics/MetricExtractor';
+import { Metric, MetricResult } from './metrics/Metric';
+import { MetricFactory } from './metrics/MetricFactory';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { Webview } from './webview/view';
-import { ConstructorCountMetric } from './metrics/ConstructorCountMetric';
-import { InterfaceConstructorParameterCountMetric } from './metrics/InterfaceConstructorParameterCountMetric';
-import { SingleResponsibilityMetric } from './metrics/SingleResponsibilityMetric';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
 
-// Status bar item
 let statusBarItem: vscode.StatusBarItem;
 let isLoading = false;
 
-const metricExtractors: MetricExtractor[] = [
-  LineCountMetric,
-  IfCountMetric,
-  UsingCountMetric,
-  LoopCountMetric,
-  LambdaCountMetric,
-  MethodCountMetric,
-  ClassCountMetric,
-  AverageMethodSizeMetric,
-  MethodCohesionMetric,
-  NestingDepthMetric,
-  CommentLineCountMetric,
-  CommentRatioMetric,
-  CodeDuplicationMetric,
-  GetterSetterCountMetric,
-  ObjectTypeMetric,
-  ConstructorCountMetric,
-  InterfaceConstructorParameterCountMetric,
-  SingleResponsibilityMetric
-];
+MetricFactory.initializeRegistry();
 
 export function activate(context: vscode.ExtensionContext) {
   output.appendLine("Activando extensión LineCounter");
   
-  // Create status bar item
   statusBarItem = vscode.window.createStatusBarItem(StatusBarAlignment.Right, 100);
   statusBarItem.text = "$(symbol-misc)";
   statusBarItem.tooltip = "Chontaduro Labeler";
@@ -64,7 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(statusBarItem);
   statusBarItem.show();
 
-  // Set the status bar item icon using a built-in VS Code icon
   statusBarItem.text = "$(symbol-misc)";
   
   const provider = new LineCountViewProvider(context.extensionUri);
@@ -91,7 +52,6 @@ export function activate(context: vscode.ExtensionContext) {
       }
     });
     
-    // Register a command to open settings
   context.subscriptions.push(
     vscode.commands.registerCommand('lineCounterView.openSettings', () => {
       if (provider.hasView) {
@@ -100,7 +60,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
   
-  // Register commands to show/hide loading spinner
   context.subscriptions.push(
     vscode.commands.registerCommand('chontaduro.startLoading', () => {
       startLoading();
@@ -113,7 +72,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Register commands for navigation
   context.subscriptions.push(
     vscode.commands.registerCommand('lineCounterView.navigatePrevious', () => {
       if (provider.hasView) {
@@ -137,7 +95,6 @@ export function deactivate() {
   }
 }
 
-// Function to start loading animation
 export function startLoading() {
   if (isLoading) {
     return;
@@ -147,7 +104,6 @@ export function startLoading() {
   statusBarItem.text = "$(sync~spin)";
 }
 
-// Function to stop loading animation
 export function stopLoading() {
   isLoading = false;
   statusBarItem.text = "$(symbol-misc)";
@@ -163,10 +119,9 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private maxDepthDecorationType: vscode.TextEditorDecorationType;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
-    // Initialize CSV manager
-    this.csvManager = new MetricsCSVManager(metricExtractors, output);
+    const defaultMetrics = MetricFactory.getCommonMetrics();
+    this.csvManager = new MetricsCSVManager(defaultMetrics, output);
     
-    // Create decoration type for max depth line
     this.maxDepthDecorationType = vscode.window.createTextEditorDecorationType({
       gutterIconPath: Uri.joinPath(this._extensionUri, 'media', 'icon-inverted.svg'),
       gutterIconSize: 'contain',
@@ -200,7 +155,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       } else if (message.command === 'webviewReady') {
         output.appendLine('Webview is ready');
         
-        // If we have language info stored, send it now
         if (this.currentLanguageInfo && this._view) {
           output.appendLine(`Sending language info after webview ready: ${this.currentLanguageInfo.name}`);
           this._view.webview.postMessage({
@@ -241,7 +195,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   public update() {
     if (!this._view || this.csFiles.length === 0) return;
     
-    // Clear decorations from current editor
     const currentEditor = vscode.window.activeTextEditor;
     if (currentEditor) {
       currentEditor.setDecorations(this.maxDepthDecorationType, []);
@@ -251,23 +204,21 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     vscode.workspace.openTextDocument(uri).then(document => {
       const fileName = uri.fsPath.split('/').pop() || 'Archivo';
       
-      // Detect language
       const languageInfo = LanguageDetector.detectLanguage(document);
       output.appendLine(`Detected language: ${languageInfo.name}`);
       
-      // Store the current language info
       this.currentLanguageInfo = languageInfo;
 
       let content = '';
       const metricResults: MetricResult[] = [];
       
-      // Extract all metrics first
-      for (const extractor of metricExtractors) {
-        const result = extractor.extract(document);
+      const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+
+      for (const metric of metrics) {
+        const result = metric.extract(document);
         metricResults.push(result);
         
-        // If this is the nesting depth metric and it has a lineNumber, select that line and add decoration
-        if (extractor.name === 'nestingDepth' && result.lineNumber !== undefined) {
+        if (metric.name === 'nestingDepth' && result.lineNumber !== undefined) {
           const editor = vscode.window.activeTextEditor;
           if (editor && editor.document.uri.toString() === uri.toString()) {
             const position = new vscode.Position(result.lineNumber, 0);
@@ -278,28 +229,23 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
               vscode.TextEditorRevealType.InCenter
             );
             
-            // Clear previous decorations and apply new one
             const range = new vscode.Range(position, position);
             editor.setDecorations(this.maxDepthDecorationType, [range]);
           }
         }
       }
       
-      // Filter out metrics with value 0 and sort from highest to lowest value
       const nonZeroMetrics = metricResults.filter(result => result.value !== 0);
       nonZeroMetrics.sort((a, b) => b.value - a.value);
       
-      // Get metrics with value 0
       const zeroMetrics = metricResults.filter(result => result.value === 0);
       
-      // Generate content with collapsible sections for non-zero metrics
       content = '<div class="metrics-container">';
       
       if (nonZeroMetrics.length === 0) {
         content += '<p>No hay métricas con valores diferentes de cero.</p>';
       } else {
         for (const result of nonZeroMetrics) {
-          // Create a collapsible button for each metric
           content += `
             <button class="collapsible">
               <div>
@@ -314,7 +260,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
                 <p>Valor: ${result.value}</p>
                 <p>Métrica: ${result.label}</p>
                 ${result.lineNumber !== undefined ? `<p>Línea: ${result.lineNumber + 1}</p>` : ''}
-                <p>Esta métrica indica ${metricExtractors.find(m => {
+                <p>Esta métrica indica ${metrics.find((m: Metric) => {
                   const extractedResult = m.extract(document);
                   return extractedResult.label === result.label;
                 })?.description || 'información sobre la calidad del código.'}</p>
@@ -324,7 +270,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         }
       }
       
-      // Add a collapsible section for metrics with value 0
       content += `
         <div style="margin-top: 20px;">
           <button class="collapsible" style="background-color: #f8f9fa;">
@@ -342,7 +287,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       } else {
         content += '<ul style="padding-left: 20px; margin-top: 10px;">';
         for (const result of zeroMetrics) {
-          content += `<li><strong>${result.label}</strong> - Esta métrica indica ${metricExtractors.find(m => {
+          content += `<li><strong>${result.label}</strong> - Esta métrica indica ${metrics.find((m: Metric) => {
             const extractedResult = m.extract(document);
             return extractedResult.label === result.label;
           })?.description || 'información sobre la calidad del código.'}</li>`;
@@ -357,7 +302,6 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       </div>
       `;
       
-      // Add a hidden table with all metrics for CSV export
       content += '<div style="display: none;">';
       content += '<table class="metrics-table">';
       content += '<thead><tr><th>Valor</th><th>Métrica</th></tr></thead>';
@@ -368,13 +312,12 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       content += '</tbody></table>';
       content += '</div>';
 
-      // Get the number of processed files
+      this.csvManager = new MetricsCSVManager(metrics, output);
+      
       const processedFilesCount = this.csvManager.getProcessedFilesCount();
 
-      // Set the HTML content
       this._view!.webview.html = this.getHtmlContent(content, fileName, processedFilesCount);
       
-      // Send language information to the webview after a small delay to ensure the webview is ready
       setTimeout(() => {
         if (this._view) {
           output.appendLine(`Sending language info: ${languageInfo.name}, ${languageInfo.icon}, ${languageInfo.color}`);
@@ -385,7 +328,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
             color: languageInfo.color
           });
         }
-      }, 100); // 100ms delay
+      }, 100); 
     });
   }
 
@@ -430,6 +373,8 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       const currentUri = this.csFiles[this.currentIndex];
       try {
         const currentDoc = await vscode.workspace.openTextDocument(currentUri);
+        const metrics = MetricFactory.getMetricsForLanguage(currentDoc.languageId.toLowerCase());
+        this.csvManager = new MetricsCSVManager(metrics, output);
         this.csvManager.saveMetricsToCSV(currentDoc, this.needsRefactoring);
         
         this.needsRefactoring = false;
@@ -455,20 +400,13 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
   private getHtmlContent(content: string, title: string, processedFilesCount: number = 0): string {
-    //const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'webview', 'lineCountView.html');
-    //let html = fs.readFileSync(htmlPath, 'utf8');
     const webview = new Webview();
     
-    // Make sure we have a view before trying to get the webview
     if (!this._view) {
       return '';
     }
     
     let html = webview.getHtml(title, processedFilesCount, content, this._extensionUri, this._view.webview);
-
-    //html = html.replace('${title}', title);
-    //html = html.replace('${processedFilesCount}', processedFilesCount.toString());
-    //html = html.replace('${content}', content);
     
     return html;
   }

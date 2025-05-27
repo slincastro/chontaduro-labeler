@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const ObjectTypeMetric: MetricExtractor = {
+export const ObjectTypeMetric: Metric = {
   name: 'objectType',
   description: 'el tipo de objeto predominante en el archivo.',
   extract(document: vscode.TextDocument): MetricResult {

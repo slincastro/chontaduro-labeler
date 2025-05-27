@@ -8,7 +8,7 @@ suite('IfCountMetric Test Suite', () => {
     const result = IfCountMetric.extract(document);
     
     assert.strictEqual(result.value, 0);
-    assert.strictEqual(result.label, 'Ifs');
+    assert.strictEqual(result.label, 'Cantidad de ifs');
   });
 
   test('Should return 0 for document with no if statements', () => {

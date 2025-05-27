@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const LoopCountMetric: MetricExtractor = {
+export const LoopCountMetric: Metric = {
   name: 'loopCount',
   description: 'el número de estructuras de bucle (for, while, foreach) en el código.',
   extract(document: vscode.TextDocument): MetricResult {

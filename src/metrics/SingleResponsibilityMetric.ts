@@ -1,4 +1,4 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 import OpenAI from 'openai';
 
@@ -89,7 +89,7 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
   }
 }
 
-export const SingleResponsibilityMetric: MetricExtractor = {
+export const SingleResponsibilityMetric: Metric = {
   name: 'singleResponsibility',
   description: 'evalúa si la clase cumple con el principio de responsabilidad única (SRP).',
   extract(document: vscode.TextDocument): MetricResult {

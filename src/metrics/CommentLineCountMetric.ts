@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const CommentLineCountMetric: MetricExtractor = {
+export const CommentLineCountMetric: Metric = {
   name: 'commentLineCount',
   description: 'el número total de líneas de comentarios en el código.',
   extract(document: vscode.TextDocument): MetricResult {

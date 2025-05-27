@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const IfCountMetric: MetricExtractor = {
+export const IfCountMetric: Metric = {
   name: 'ifCount',
   description: 'el número de declaraciones condicionales (if) en el código.',
   extract(document: vscode.TextDocument): MetricResult {

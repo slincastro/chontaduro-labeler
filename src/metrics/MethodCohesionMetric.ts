@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const MethodCohesionMetric: MetricExtractor = {
+export const MethodCohesionMetric: Metric = {
   name: 'methodCohesion',
   description: 'qué tan bien los métodos están relacionados entre sí.',
   extract(document: vscode.TextDocument): MetricResult {
@@ -15,7 +15,7 @@ export const MethodCohesionMetric: MetricExtractor = {
     const totalProperties = classProperties.length;
     if (totalProperties === 0) {
       return {
-        label: 'Cohesión de métodos',
+        label: 'Cohesión promedio de métodos (%)',
         value: 0,
       };
     }
@@ -70,7 +70,7 @@ export const MethodCohesionMetric: MetricExtractor = {
       : Math.round((methodsCohesion.reduce((acc, val) => acc + val, 0) / methodsCohesion.length) * 100);
 
     return {
-      label: 'Cohesión de métodos',
+      label: 'Cohesión promedio de métodos (%)',
       value: avgCohesion,
     };
   },

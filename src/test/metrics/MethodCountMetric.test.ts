@@ -8,7 +8,7 @@ suite('MethodCountMetric Test Suite', () => {
     const result = MethodCountMetric.extract(document);
     
     assert.strictEqual(result.value, 0);
-    assert.strictEqual(result.label, 'Métodos');
+    assert.strictEqual(result.label, 'Cantidad de métodos');
   });
 
   test('Should return 0 for document with no methods', () => {
