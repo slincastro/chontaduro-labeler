@@ -384,28 +384,34 @@ export class Webview {
               });
             }
             
-            function toggleCollapsible(element) {
-              element.classList.toggle("active");
-              const content = element.nextElementSibling;
-              
-              if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-                element.querySelector('.collapsible-dots').textContent = "...";
-              } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-                element.querySelector('.collapsible-dots').textContent = "▼";
-              }
-            }
+          function toggleCollapsible(element) {
+            element.classList.toggle("active");
+            const content = element.nextElementSibling;
             
-            // Initialize all collapsible elements after the page loads
-            document.addEventListener('DOMContentLoaded', function() {
-              const collapsibles = document.getElementsByClassName("collapsible");
-              for (let i = 0; i < collapsibles.length; i++) {
-                collapsibles[i].addEventListener("click", function() {
-                  toggleCollapsible(this);
-                });
-              }
+            if (content.style.maxHeight) {
+              content.style.maxHeight = null;
+              element.querySelector('.collapsible-dots').textContent = "...";
+            } else {
+              content.style.maxHeight = content.scrollHeight + "px";
+              element.querySelector('.collapsible-dots').textContent = "▼";
+            }
+          }
+          
+          function highlightDuplicatedCode() {
+            vscode.postMessage({
+              command: 'highlightDuplicatedCode'
             });
+          }
+          
+          // Initialize all collapsible elements after the page loads
+          document.addEventListener('DOMContentLoaded', function() {
+            const collapsibles = document.getElementsByClassName("collapsible");
+            for (let i = 0; i < collapsibles.length; i++) {
+              collapsibles[i].addEventListener("click", function() {
+                toggleCollapsible(this);
+              });
+            }
+          });
   
             // Settings panel functions
             function openSettings() {

@@ -13,6 +13,7 @@ export const CodeDuplicationMetricV2: Metric = {
     const MIN_BLOCK_SIZE = 3;
     const normalizedBlocks = new Map<string, number[]>();
     let duplicatedLineCount = 0;
+    const duplicatedLines: number[] = [];
 
     function normalizeLine(line: string): string {
       return line
@@ -39,10 +40,29 @@ export const CodeDuplicationMetricV2: Metric = {
       if (normalizedBlocks.has(hash)) {
         duplicatedLineCount += MIN_BLOCK_SIZE;
         normalizedBlocks.get(hash)?.push(i);
+        
+        // Add the duplicated lines to the array
+        for (let j = 0; j < MIN_BLOCK_SIZE; j++) {
+          duplicatedLines.push(i + j);
+        }
       } else {
         normalizedBlocks.set(hash, [i]);
       }
     }
+
+    // Find all duplicated blocks (blocks with more than one occurrence)
+    const duplicatedBlocks: { startLine: number, endLine: number }[] = [];
+    normalizedBlocks.forEach((lineIndices, hash) => {
+      if (lineIndices.length > 1) {
+        // For each occurrence of this duplicated block
+        lineIndices.forEach(startLine => {
+          duplicatedBlocks.push({
+            startLine,
+            endLine: startLine + MIN_BLOCK_SIZE - 1
+          });
+        });
+      }
+    });
 
     const totalNonEmptyLines = lines.filter(line => line.trim() !== '').length;
 
@@ -53,6 +73,7 @@ export const CodeDuplicationMetricV2: Metric = {
     return {
       label: 'Porcentaje de código duplicado v2 (%)',
       value: Math.round(duplicationPercentage * 100) / 100,
+      duplicatedBlocks: duplicatedBlocks
     };
   },
 };

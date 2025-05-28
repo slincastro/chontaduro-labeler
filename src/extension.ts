@@ -125,6 +125,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private csvManager: MetricsCSVManager;
   private needsRefactoring: boolean = false;
   private maxDepthDecorationType: vscode.TextEditorDecorationType;
+  private duplicatedCodeDecorationType: vscode.TextEditorDecorationType;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     const defaultMetrics = MetricFactory.getCommonMetrics();
@@ -134,6 +135,12 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       gutterIconPath: Uri.joinPath(this._extensionUri, 'media', 'icon-inverted.svg'),
       gutterIconSize: 'contain',
       overviewRulerColor: 'rgba(0, 122, 204, 0.7)',
+      overviewRulerLane: vscode.OverviewRulerLane.Right
+    });
+    
+    this.duplicatedCodeDecorationType = vscode.window.createTextEditorDecorationType({
+      backgroundColor: 'rgba(255, 165, 0, 0.2)',
+      overviewRulerColor: 'rgba(255, 165, 0, 0.7)',
       overviewRulerLane: vscode.OverviewRulerLane.Right
     });
   }
@@ -183,6 +190,23 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       } else if (message.command === 'endOpenAIRequest') {
         vscode.commands.executeCommand('chontaduro.stopLoading');
         this.update(); // Update the UI when OpenAI request is complete
+      } else if (message.command === 'highlightDuplicatedCode') {
+        // Get the current document
+        const uri = this.csFiles[this.currentIndex];
+        vscode.workspace.openTextDocument(uri).then(document => {
+          // Extract the duplicated blocks from the CodeDuplicationMetricV2 metric
+          const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+          const codeDuplicationMetric = metrics.find(m => m.name === 'codeDuplicationV2');
+          
+          if (codeDuplicationMetric) {
+            const result = codeDuplicationMetric.extract(document);
+            if (result.duplicatedBlocks && result.duplicatedBlocks.length > 0) {
+              this.highlightDuplicatedCode(document, result.duplicatedBlocks);
+            } else {
+              vscode.window.showInformationMessage('No se encontraron bloques de código duplicados.');
+            }
+          }
+        });
       }
     });
 
@@ -277,6 +301,12 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         content += '<p>No hay métricas con valores diferentes de cero.</p>';
       } else {
         for (const result of nonZeroMetrics) {
+          // Find the corresponding metric
+          const metric = metrics.find((m: Metric) => {
+            const extractedResult = m.extract(document);
+            return extractedResult.label === result.label;
+          });
+          
           content += `
             <button class="collapsible">
               <div>
@@ -291,10 +321,14 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
                 <p>Valor: ${result.value}</p>
                 <p>Métrica: ${result.label}</p>
                 ${result.lineNumber !== undefined ? `<p>Línea: ${result.lineNumber + 1}</p>` : ''}
-                <p>Esta métrica indica ${metrics.find((m: Metric) => {
-                  const extractedResult = m.extract(document);
-                  return extractedResult.label === result.label;
-                })?.description || 'información sobre la calidad del código.'}</p>
+                <p>Esta métrica indica ${metric?.description || 'información sobre la calidad del código.'}</p>
+                ${metric?.name === 'codeDuplicationV2' ? `
+                <div style="margin-top: 15px;">
+                  <button onclick="highlightDuplicatedCode()" style="background-color: #0078d7; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                    Mostrar código duplicado
+                  </button>
+                </div>
+                ` : ''}
               </div>
             </div>
           `;
@@ -524,6 +558,40 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     });
     
     output.appendLine('Sent settings to webview');
+  }
+  
+  private highlightDuplicatedCode(document: vscode.TextDocument, duplicatedBlocks: { startLine: number, endLine: number }[]) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
+      return;
+    }
+    
+    // Clear any existing decorations
+    editor.setDecorations(this.duplicatedCodeDecorationType, []);
+    
+    // Create ranges for all duplicated blocks
+    const ranges: vscode.Range[] = [];
+    
+    for (const block of duplicatedBlocks) {
+      const startPos = new vscode.Position(block.startLine, 0);
+      const endPos = new vscode.Position(block.endLine, document.lineAt(block.endLine).text.length);
+      ranges.push(new vscode.Range(startPos, endPos));
+    }
+    
+    // Apply the decorations
+    editor.setDecorations(this.duplicatedCodeDecorationType, ranges);
+    
+    // Scroll to the first duplicated block if there is one
+    if (duplicatedBlocks.length > 0) {
+      const firstBlock = duplicatedBlocks[0];
+      const startPos = new vscode.Position(firstBlock.startLine, 0);
+      const endPos = new vscode.Position(firstBlock.endLine, document.lineAt(firstBlock.endLine).text.length);
+      
+      editor.revealRange(
+        new vscode.Range(startPos, endPos),
+        vscode.TextEditorRevealType.InCenter
+      );
+    }
   }
   
   private saveSettings(settings: { apiKey: string, model: string }) {
