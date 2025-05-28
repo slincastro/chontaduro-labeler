@@ -15,6 +15,7 @@
     "onStartupFinished",
     "onLanguage:csharp",
     "onLanguage:typescript",
+    "onLanguage:python",
     "onView:lineCounterView"
   ],
   "main": "./out/extension.js",

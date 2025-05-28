@@ -192,8 +192,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
   private async loadProjectFiles() {
-    const files = await vscode.workspace.findFiles('**/*.cs', '**/node_modules/**');
-    this.csFiles = files.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+    const csFiles = await vscode.workspace.findFiles('**/*.cs', '**/node_modules/**');
+    const pyFiles = await vscode.workspace.findFiles('**/*.py', '**/node_modules/**');
+    
+    this.csFiles = [...csFiles, ...pyFiles].sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+    
     const activeUri = vscode.window.activeTextEditor?.document.uri;
     this.currentIndex = this.csFiles.findIndex(uri => uri.toString() === activeUri?.toString());
     if (this.currentIndex === -1 && this.csFiles.length > 0) {
