@@ -633,10 +633,12 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
           backgroundColor: color,
           overviewRulerColor: rulerColor,
           overviewRulerLane: vscode.OverviewRulerLane.Right,
-          after: {
-            contentText: ` [${blockId}]`,
-            color: 'rgba(0, 0, 0, 0.7)',
-            margin: '0 0 0 10px'
+          before: {
+            contentText: `${blockId} `,
+            color: 'white',
+            backgroundColor: rulerColor,
+            margin: '0 5px 0 0',
+            border: '1px solid black'
           }
         }));
         
