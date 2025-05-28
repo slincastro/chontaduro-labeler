@@ -22,28 +22,18 @@ import { CognitiveComplexityMetric } from './CognitiveComplexityMetric';
 import { CommentLineCountMetricPython } from './python/CommentLineCountMetricPython';
 import { CommentRatioMetricPython } from './python/CommentRatioMetricPython';
 
-/**
- * Factory class for creating and registering metrics
- */
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
 
-  /**
-   * Initialize the metric registry with all available metrics
-   */
+
   public static initializeRegistry(): void {
     this.registerCommonMetrics();
     this.registerLanguageSpecificMetrics();
   }
 
-  /**
-   * Register all common metrics that apply to all languages
-   */
   private static registerCommonMetrics(): void {
     const commonMetrics: Metric[] = [
       LineCountMetric,
-      CommentLineCountMetric,
-      CommentRatioMetric,
       CodeDuplicationMetric,
       NestingDepthMetric
     ];
@@ -51,11 +41,7 @@ export class MetricFactory {
     this.registry.registerCommonMetrics(commonMetrics);
   }
 
-  /**
-   * Register all language-specific metrics
-   */
   private static registerLanguageSpecificMetrics(): void {
-    // C# specific metrics
     const csharpMetrics: Metric[] = [
       UsingCountMetric,
       ClassCountMetric,
@@ -71,11 +57,12 @@ export class MetricFactory {
       InterfaceConstructorParameterCountMetric,
       SingleResponsibilityMetric,
       CognitiveComplexityMetric,
+      CommentLineCountMetric,
+      CommentRatioMetric,
 
     ];
     this.registry.registerLanguageMetrics('csharp', csharpMetrics);
     
-    // JavaScript specific metrics
     const javascriptMetrics: Metric[] = [
       IfCountMetric,
       LoopCountMetric,
@@ -83,11 +70,12 @@ export class MetricFactory {
       MethodCountMetric,
       ClassCountMetric,
       AverageMethodSizeMetric,
-      CognitiveComplexityMetric
+      CognitiveComplexityMetric,
+      CommentLineCountMetric,
+      CommentRatioMetric,
     ];
     this.registry.registerLanguageMetrics('javascript', javascriptMetrics);
     
-    // TypeScript specific metrics
     const typescriptMetrics: Metric[] = [
       IfCountMetric,
       LoopCountMetric,
@@ -96,11 +84,12 @@ export class MetricFactory {
       ClassCountMetric,
       AverageMethodSizeMetric,
       InterfaceConstructorParameterCountMetric,
-      CognitiveComplexityMetric
+      CognitiveComplexityMetric,
+      CommentLineCountMetric,
+      CommentRatioMetric,
     ];
     this.registry.registerLanguageMetrics('typescript', typescriptMetrics);
     
-    // Python specific metrics
     const pythonMetrics: Metric[] = [
       IfCountMetric,
       LoopCountMetric,
@@ -113,7 +102,6 @@ export class MetricFactory {
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
-    // Java specific metrics
     const javaMetrics: Metric[] = [
       IfCountMetric,
       LoopCountMetric,
@@ -123,7 +111,9 @@ export class MetricFactory {
       AverageMethodSizeMetric,
       GetterSetterCountMetric,
       ConstructorCountMetric,
-      CognitiveComplexityMetric
+      CognitiveComplexityMetric,
+      CommentLineCountMetric,
+      CommentRatioMetric,
     ];
     this.registry.registerLanguageMetrics('java', javaMetrics);
   }
