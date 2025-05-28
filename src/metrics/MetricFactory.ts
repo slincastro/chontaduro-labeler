@@ -18,6 +18,7 @@ import { ObjectTypeMetric } from './ObjectTypeMetric';
 import { ConstructorCountMetric } from './ConstructorCountMetric';
 import { InterfaceConstructorParameterCountMetric } from './InterfaceConstructorParameterCountMetric';
 import { SingleResponsibilityMetric } from './SingleResponsibilityMetric';
+import { CognitiveComplexityMetric } from './CognitiveComplexityMetric';
 
 /**
  * Factory class for creating and registering metrics
@@ -66,7 +67,9 @@ export class MetricFactory {
       ObjectTypeMetric,
       ConstructorCountMetric,
       InterfaceConstructorParameterCountMetric,
-      SingleResponsibilityMetric
+      SingleResponsibilityMetric,
+      CognitiveComplexityMetric,
+
     ];
     this.registry.registerLanguageMetrics('csharp', csharpMetrics);
     
@@ -77,7 +80,8 @@ export class MetricFactory {
       LambdaCountMetric,
       MethodCountMetric,
       ClassCountMetric,
-      AverageMethodSizeMetric
+      AverageMethodSizeMetric,
+      CognitiveComplexityMetric
     ];
     this.registry.registerLanguageMetrics('javascript', javascriptMetrics);
     
@@ -89,7 +93,8 @@ export class MetricFactory {
       MethodCountMetric,
       ClassCountMetric,
       AverageMethodSizeMetric,
-      InterfaceConstructorParameterCountMetric
+      InterfaceConstructorParameterCountMetric,
+      CognitiveComplexityMetric
     ];
     this.registry.registerLanguageMetrics('typescript', typescriptMetrics);
     
@@ -99,7 +104,8 @@ export class MetricFactory {
       LoopCountMetric,
       LambdaCountMetric,
       MethodCountMetric,
-      ClassCountMetric
+      ClassCountMetric,
+      CognitiveComplexityMetric
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
@@ -112,7 +118,8 @@ export class MetricFactory {
       ClassCountMetric,
       AverageMethodSizeMetric,
       GetterSetterCountMetric,
-      ConstructorCountMetric
+      ConstructorCountMetric,
+      CognitiveComplexityMetric
     ];
     this.registry.registerLanguageMetrics('java', javaMetrics);
   }
