@@ -126,6 +126,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private needsRefactoring: boolean = false;
   private maxDepthDecorationType: vscode.TextEditorDecorationType;
   private duplicatedCodeDecorationType: vscode.TextEditorDecorationType;
+  private duplicatedCodeDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     const defaultMetrics = MetricFactory.getCommonMetrics();
@@ -560,7 +561,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     output.appendLine('Sent settings to webview');
   }
   
-  private highlightDuplicatedCode(document: vscode.TextDocument, duplicatedBlocks: { startLine: number, endLine: number }[]) {
+  private highlightDuplicatedCode(document: vscode.TextDocument, duplicatedBlocks: { startLine: number, endLine: number, blockId?: string }[]) {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
       return;
@@ -568,18 +569,95 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     
     // Clear any existing decorations
     editor.setDecorations(this.duplicatedCodeDecorationType, []);
+    this.duplicatedCodeDecorationTypes.forEach(decorationType => {
+      editor.setDecorations(decorationType, []);
+    });
     
-    // Create ranges for all duplicated blocks
-    const ranges: vscode.Range[] = [];
+    // Define a set of colors for different block IDs
+    const colors = [
+      'rgba(255, 165, 0, 0.2)', // Orange
+      'rgba(0, 128, 255, 0.2)',  // Blue
+      'rgba(255, 0, 0, 0.2)',    // Red
+      'rgba(0, 255, 0, 0.2)',    // Green
+      'rgba(128, 0, 128, 0.2)',  // Purple
+      'rgba(255, 192, 203, 0.2)', // Pink
+      'rgba(0, 255, 255, 0.2)',  // Cyan
+      'rgba(255, 255, 0, 0.2)'   // Yellow
+    ];
+    
+    // Group blocks by blockId
+    const blocksByBlockId = new Map<string, { startLine: number, endLine: number }[]>();
+    const blocksWithoutId: { startLine: number, endLine: number }[] = [];
     
     for (const block of duplicatedBlocks) {
-      const startPos = new vscode.Position(block.startLine, 0);
-      const endPos = new vscode.Position(block.endLine, document.lineAt(block.endLine).text.length);
-      ranges.push(new vscode.Range(startPos, endPos));
+      if (block.blockId) {
+        // Block has an ID, group it
+        if (!blocksByBlockId.has(block.blockId)) {
+          blocksByBlockId.set(block.blockId, []);
+        }
+        blocksByBlockId.get(block.blockId)?.push({
+          startLine: block.startLine,
+          endLine: block.endLine
+        });
+      } else {
+        // Block doesn't have an ID, add to the list of blocks without ID
+        blocksWithoutId.push({
+          startLine: block.startLine,
+          endLine: block.endLine
+        });
+      }
     }
     
-    // Apply the decorations
-    editor.setDecorations(this.duplicatedCodeDecorationType, ranges);
+    // Handle blocks without ID using the original decoration type
+    if (blocksWithoutId.length > 0) {
+      const ranges: vscode.Range[] = [];
+      
+      for (const block of blocksWithoutId) {
+        const startPos = new vscode.Position(block.startLine, 0);
+        const endPos = new vscode.Position(block.endLine, document.lineAt(block.endLine).text.length);
+        ranges.push(new vscode.Range(startPos, endPos));
+      }
+      
+      editor.setDecorations(this.duplicatedCodeDecorationType, ranges);
+    }
+    
+    // Create and apply decorations for each blockId
+    let colorIndex = 0;
+    blocksByBlockId.forEach((blocks, blockId) => {
+      // Create a decoration type for this blockId if it doesn't exist
+      if (!this.duplicatedCodeDecorationTypes.has(blockId)) {
+        const color = colors[colorIndex % colors.length];
+        const rulerColor = color.replace('0.2', '0.7');
+        
+        this.duplicatedCodeDecorationTypes.set(blockId, vscode.window.createTextEditorDecorationType({
+          backgroundColor: color,
+          overviewRulerColor: rulerColor,
+          overviewRulerLane: vscode.OverviewRulerLane.Right,
+          after: {
+            contentText: ` [${blockId}]`,
+            color: 'rgba(0, 0, 0, 0.7)',
+            margin: '0 0 0 10px'
+          }
+        }));
+        
+        colorIndex++;
+      }
+      
+      // Create ranges for all blocks with this blockId
+      const ranges: vscode.Range[] = [];
+      
+      for (const block of blocks) {
+        const startPos = new vscode.Position(block.startLine, 0);
+        const endPos = new vscode.Position(block.endLine, document.lineAt(block.endLine).text.length);
+        ranges.push(new vscode.Range(startPos, endPos));
+      }
+      
+      // Apply the decorations
+      const decorationType = this.duplicatedCodeDecorationTypes.get(blockId);
+      if (decorationType) {
+        editor.setDecorations(decorationType, ranges);
+      }
+    });
     
     // Scroll to the first duplicated block if there is one
     if (duplicatedBlocks.length > 0) {

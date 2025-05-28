@@ -4,7 +4,7 @@ export interface MetricResult {
   label: string;
   value: number;
   lineNumber?: number;
-  duplicatedBlocks?: { startLine: number, endLine: number }[];
+  duplicatedBlocks?: { startLine: number, endLine: number, blockId?: string }[];
 }
 
 export interface Metric {

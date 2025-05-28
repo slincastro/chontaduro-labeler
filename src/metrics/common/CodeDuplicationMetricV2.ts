@@ -51,14 +51,34 @@ export const CodeDuplicationMetricV2: Metric = {
     }
 
     // Find all duplicated blocks (blocks with more than one occurrence)
-    const duplicatedBlocks: { startLine: number, endLine: number }[] = [];
+    const duplicatedBlocks: { startLine: number, endLine: number, blockId: string }[] = [];
+    
+    // Use letters for block identifiers
+    const blockIdentifiers = 'abcdefghijklmnopqrstuvwxyz';
+    let blockIdCounter = 0;
+    
     normalizedBlocks.forEach((lineIndices, hash) => {
       if (lineIndices.length > 1) {
+        // Generate a unique identifier for this set of duplicated blocks
+        // If we have more than 26 sets, we'll start using a1, a2, etc.
+        let blockId: string;
+        if (blockIdCounter < blockIdentifiers.length) {
+          blockId = blockIdentifiers[blockIdCounter];
+        } else {
+          // For blockIdCounter >= 26, use a1, a2, etc.
+          const letterIndex = blockIdCounter % blockIdentifiers.length;
+          const numberSuffix = Math.floor(blockIdCounter / blockIdentifiers.length);
+          blockId = blockIdentifiers[letterIndex] + numberSuffix;
+        }
+        
+        blockIdCounter++;
+        
         // For each occurrence of this duplicated block
         lineIndices.forEach(startLine => {
           duplicatedBlocks.push({
             startLine,
-            endLine: startLine + MIN_BLOCK_SIZE - 1
+            endLine: startLine + MIN_BLOCK_SIZE - 1,
+            blockId: blockId
           });
         });
       }
