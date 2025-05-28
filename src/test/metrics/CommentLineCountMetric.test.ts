@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { CommentLineCountMetric } from '../../metrics/CommentLineCountMetric';
+import { CommentLineCountMetric } from '../../metrics/common/CommentLineCountMetric';
 
 suite('CommentLineCountMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {
