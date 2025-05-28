@@ -21,6 +21,7 @@ import { SingleResponsibilityMetric } from './SingleResponsibilityMetric';
 import { CognitiveComplexityMetric } from './CognitiveComplexityMetric';
 import { CommentLineCountMetricPython } from './python/CommentLineCountMetricPython';
 import { CommentRatioMetricPython } from './python/CommentRatioMetricPython';
+import { CodeDuplicationMetricV2 } from './common/CodeDuplicationMetricV2';
 
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
@@ -35,7 +36,8 @@ export class MetricFactory {
     const commonMetrics: Metric[] = [
       LineCountMetric,
       CodeDuplicationMetric,
-      NestingDepthMetric
+      NestingDepthMetric,
+      CodeDuplicationMetricV2
     ];
 
     this.registry.registerCommonMetrics(commonMetrics);
