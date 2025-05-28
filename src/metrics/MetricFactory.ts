@@ -20,6 +20,7 @@ import { InterfaceConstructorParameterCountMetric } from './InterfaceConstructor
 import { SingleResponsibilityMetric } from './SingleResponsibilityMetric';
 import { CognitiveComplexityMetric } from './CognitiveComplexityMetric';
 import { CommentLineCountMetricPython } from './python/CommentLineCountMetricPython';
+import { CommentRatioMetricPython } from './python/CommentRatioMetricPython';
 
 /**
  * Factory class for creating and registering metrics
@@ -107,7 +108,8 @@ export class MetricFactory {
       MethodCountMetric,
       ClassCountMetric,
       CognitiveComplexityMetric,
-      CommentLineCountMetricPython
+      CommentLineCountMetricPython,
+      CommentRatioMetricPython
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
