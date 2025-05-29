@@ -18,12 +18,13 @@ import { ObjectTypeMetric } from './ObjectTypeMetric';
 import { ConstructorCountMetric } from './ConstructorCountMetric';
 import { InterfaceConstructorParameterCountMetric } from './InterfaceConstructorParameterCountMetric';
 import { SingleResponsibilityMetric } from './SingleResponsibilityMetric';
-import { CognitiveComplexityMetric } from './CognitiveComplexityMetric';
+import { CognitiveComplexityMetric } from './common/CognitiveComplexityMetric';
 import { CommentLineCountMetricPython } from './python/CommentLineCountMetricPython';
 import { CommentRatioMetricPython } from './python/CommentRatioMetricPython';
 import { CodeDuplicationMetricV2 } from './common/CodeDuplicationMetricV2';
 import { NestingDepthMetricPython } from './python/NestingDepthMetricPython';
 import { MethodCountMetricPython } from './python/MethodCountMetricPython';
+import { CognitiveComplexityMetricPython } from './python/CognitiveComplexityMetricPython';
 
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
@@ -99,10 +100,10 @@ export class MetricFactory {
       LambdaCountMetric,
       MethodCountMetricPython,
       ClassCountMetric,
-      CognitiveComplexityMetric,
       CommentLineCountMetricPython,
       CommentRatioMetricPython,
       NestingDepthMetricPython,
+      CognitiveComplexityMetricPython
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     

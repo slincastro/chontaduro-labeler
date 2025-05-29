@@ -1,4 +1,4 @@
-import { Metric, MetricResult } from './Metric';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
 export const CognitiveComplexityMetric: Metric = {
@@ -44,7 +44,8 @@ export const CognitiveComplexityMetric: Metric = {
     ];
     const logicalOperatorPattern = /(&&|\|\|)/;
     const jumpPattern = /\b(return|break|continue|throw)\b/;
-    const lambdaPattern = /=>/;
+    const lambdaPatterns = [/=>/, /->/];  // C# and Java
+
 
     let lambdaNestingLevel = 0;
 
@@ -64,34 +65,28 @@ export const CognitiveComplexityMetric: Metric = {
       // Saltar comentarios de línea y líneas vacías
       if (line.startsWith('//') || line === '') continue;
 
-      // Remover strings para evitar falsos positivos
       line = line.replace(/(['"`])(\\.|[^\\])*?\1/g, '');
 
-      // Estructuras de control
       if (controlPatterns.some(p => p.test(line))) {
         complexity += 1 + nestingLevel;
         maxLine = i;
         nestingLevel++;
       }
 
-      // Operadores lógicos
       if (logicalOperatorPattern.test(line)) {
         complexity += 1;
       }
 
-      // Saltos de flujo
       if (jumpPattern.test(line)) {
         complexity += 1;
       }
 
-      // Lambdas flecha
-      if (lambdaPattern.test(line)) {
+      if (lambdaPatterns.some(p => p.test(line))) {
         lambdaNestingLevel++;
         complexity += 2 * lambdaNestingLevel;
         maxLine = i;
       }
 
-      // Cierre de bloques
       const closeBraces = (line.match(/}/g) || []).length;
       nestingLevel -= closeBraces;
       if (nestingLevel < 0) nestingLevel = 0;

@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { CognitiveComplexityMetric } from '../../metrics/CognitiveComplexityMetric';
+import { CognitiveComplexityMetric } from '../../metrics/common/CognitiveComplexityMetric';
 
 suite('CognitiveComplexityMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {
