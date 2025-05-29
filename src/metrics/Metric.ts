@@ -5,6 +5,7 @@ export interface MetricResult {
   value: number;
   lineNumber?: number;
   duplicatedBlocks?: { startLine: number, endLine: number, blockId?: string }[];
+  loopBlocks?: { startLine: number, endLine: number, loopType: string }[];
 }
 
 export interface Metric {

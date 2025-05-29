@@ -7,12 +7,15 @@ export const LoopCountMetric: Metric = {
 
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
+    const lines = text.split('\n');
 
     // Eliminar comentarios de una sola línea y de bloque estilo C/JS/TS/Java/C#
     const textWithoutComments = text
       .replace(/\/\/.*$/gm, '')             // Comentarios de línea
       .replace(/\/\*[\s\S]*?\*\//g, '')     // Comentarios de bloque
       .replace(/#.*$/gm, '');               // Comentarios de línea estilo Python
+
+    const loopBlocks: { startLine: number, endLine: number, loopType: string }[] = [];
 
     // Regex para lenguajes tipo C/Java
     const forRegex = /\bfor\b\s*(\(|each\b)?/g;            // for y foreach (C#, Java)
@@ -24,7 +27,30 @@ export const LoopCountMetric: Metric = {
     const pythonForRegex = /\bfor\b\s+\w+\s+in\s+.*:/g;     // for i in ...
     const pythonWhileRegex = /\bwhile\b\s+.*:/g;            // while condición:
 
-    // Contar coincidencias
+    // Function to find loop locations in the original text
+    function findLoopLocations(regex: RegExp, loopType: string, originalText: string) {
+      let match;
+      while ((match = regex.exec(originalText)) !== null) {
+        const matchStart = match.index;
+        const lineNumber = originalText.substring(0, matchStart).split('\n').length - 1;
+        
+        // For most loops, highlight just the line where the loop starts
+        loopBlocks.push({
+          startLine: lineNumber,
+          endLine: lineNumber,
+          loopType: loopType
+        });
+      }
+    }
+
+    // Find all loop locations
+    findLoopLocations(/\bfor\b\s*(\(|each\b)?/g, 'for', text);
+    findLoopLocations(/\bwhile\b\s*(\()?/g, 'while', text);
+    findLoopLocations(/\bdo\b/g, 'do-while', text);
+    findLoopLocations(/\.forEach\s*\(/g, 'forEach', text);
+    findLoopLocations(/\bfor\b\s+\w+\s+in\s+.*:/g, 'for-in', text);
+
+    // Count matches in text without comments for accuracy
     const forMatches = (textWithoutComments.match(forRegex) || []).length;
     const allWhileMatches = (textWithoutComments.match(whileRegex) || []).length;
     const doWhileMatches = (textWithoutComments.match(doWhileRegex) || []).length;
@@ -45,6 +71,7 @@ export const LoopCountMetric: Metric = {
     return {
       label: 'Cantidad de bucles',
       value: loopMatches,
+      loopBlocks: loopBlocks
     };
   },
 };

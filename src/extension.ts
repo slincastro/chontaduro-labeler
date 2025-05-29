@@ -208,6 +208,23 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
             }
           }
         });
+      } else if (message.command === 'highlightLoops') {
+        // Get the current document
+        const uri = this.csFiles[this.currentIndex];
+        vscode.workspace.openTextDocument(uri).then(document => {
+          // Extract the loop blocks from the LoopCountMetric
+          const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+          const loopCountMetric = metrics.find(m => m.name === 'loopCount');
+          
+          if (loopCountMetric) {
+            const result = loopCountMetric.extract(document);
+            if (result.loopBlocks && result.loopBlocks.length > 0) {
+              this.highlightLoops(document, result.loopBlocks);
+            } else {
+              vscode.window.showInformationMessage('No se encontraron bucles en el código.');
+            }
+          }
+        });
       }
     });
 
@@ -297,6 +314,20 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       
       content = '<div class="metrics-container">';
       
+      // Add a button for LoopCountMetric at the top
+      content += `
+        <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f7ff; border-radius: 4px; border-left: 3px solid #4169E1;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong>Cantidad de bucles</strong>
+            </div>
+            <button onclick="highlightLoops()" style="background-color: #4169E1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+              Mostrar bucles
+            </button>
+          </div>
+        </div>
+      `;
+      
       // Regular metrics section
       if (nonZeroMetrics.length === 0) {
         content += '<p>No hay métricas con valores diferentes de cero.</p>';
@@ -305,7 +336,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
           // Find the corresponding metric
           const metric = metrics.find((m: Metric) => {
             const extractedResult = m.extract(document);
-            return extractedResult.label === result.label;
+            output.appendLine(`Metric: ${m.name}, Label: ${extractedResult.label}, Result Label: ${result.label}`);
+            
+            // Check if the labels match or if this is the loopCount metric and the result label is "Cantidad de bucles"
+            return extractedResult.label === result.label || 
+                  (m.name === 'loopCount' && result.label === 'Cantidad de bucles');
           });
           
           content += `
@@ -327,6 +362,13 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
                 <div style="margin-top: 15px;">
                   <button onclick="highlightDuplicatedCode()" style="background-color: #0078d7; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
                     Mostrar código duplicado
+                  </button>
+                </div>
+                ` : ''}
+                ${metric?.name === 'loopCount' || result.label === 'Cantidad de bucles' ? `
+                <div style="margin-top: 15px;">
+                  <button onclick="highlightLoops()" style="background-color: #4169E1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                    Mostrar bucles
                   </button>
                 </div>
                 ` : ''}
@@ -681,6 +723,50 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     
     output.appendLine('Saved settings to configuration');
     vscode.window.showInformationMessage('Configuración de OpenAI guardada correctamente');
+  }
+  
+  private highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
+      return;
+    }
+    
+    // Create a decoration type for loops
+    const loopDecorationType = vscode.window.createTextEditorDecorationType({
+      backgroundColor: 'rgba(65, 105, 225, 0.2)', // Royal blue with transparency
+      overviewRulerColor: 'rgba(65, 105, 225, 0.7)',
+      overviewRulerLane: vscode.OverviewRulerLane.Right,
+      before: {
+        contentText: '⟳ ', // Loop symbol
+        color: '#4169E1',
+        margin: '0 5px 0 0'
+      }
+    });
+    
+    // Create ranges for all loop blocks
+    const ranges: vscode.Range[] = [];
+    
+    for (const block of loopBlocks) {
+      const startPos = new vscode.Position(block.startLine, 0);
+      // For the end position, use the end of the line
+      const endPos = new vscode.Position(block.startLine, document.lineAt(block.startLine).text.length);
+      ranges.push(new vscode.Range(startPos, endPos));
+    }
+    
+    // Apply the decorations
+    editor.setDecorations(loopDecorationType, ranges);
+    
+    // Scroll to the first loop if there is one
+    if (loopBlocks.length > 0) {
+      const firstBlock = loopBlocks[0];
+      const startPos = new vscode.Position(firstBlock.startLine, 0);
+      const endPos = new vscode.Position(firstBlock.startLine, document.lineAt(firstBlock.startLine).text.length);
+      
+      editor.revealRange(
+        new vscode.Range(startPos, endPos),
+        vscode.TextEditorRevealType.InCenter
+      );
+    }
   }
   
 }
