@@ -17,9 +17,10 @@ export const LoopCountMetric: Metric = {
 
     const loopBlocks: { startLine: number, endLine: number, loopType: string }[] = [];
 
-    // Regex para lenguajes tipo C/Java
-    const forRegex = /\bfor\b\s*(\(|each\b)?/g;            // for y foreach (C#, Java)
-    const whileRegex = /\bwhile\b\s*(\()?/g;               // while
+    // Regex para lenguajes tipo C/Java - más específicos para evitar falsos positivos
+    const forRegex = /\bfor\b\s*\(/g;                      // for (...)
+    const forEachRegex1 = /\bforeach\b\s*\(/g;             // foreach (...)
+    const whileRegex = /\bwhile\b\s*\(/g;                  // while (...)
     const doWhileRegex = /\bdo\b[\s\S]*?\bwhile\b\s*\(/g;  // do { ... } while (...)
     const forEachRegex = /\.forEach\s*\(/g;                // método forEach() en JS/TS
 
@@ -44,14 +45,17 @@ export const LoopCountMetric: Metric = {
     }
 
     // Find all loop locations
-    findLoopLocations(/\bfor\b\s*(\(|each\b)?/g, 'for', text);
-    findLoopLocations(/\bwhile\b\s*(\()?/g, 'while', text);
-    findLoopLocations(/\bdo\b/g, 'do-while', text);
-    findLoopLocations(/\.forEach\s*\(/g, 'forEach', text);
-    findLoopLocations(/\bfor\b\s+\w+\s+in\s+.*:/g, 'for-in', text);
+    findLoopLocations(forRegex, 'for', textWithoutComments);
+    findLoopLocations(forEachRegex1, 'foreach', textWithoutComments);
+    findLoopLocations(whileRegex, 'while', textWithoutComments);
+    findLoopLocations(/\bdo\b\s*\{/g, 'do-while', textWithoutComments);
+    findLoopLocations(forEachRegex, 'forEach', textWithoutComments);
+    findLoopLocations(pythonForRegex, 'for-in', textWithoutComments);
+    findLoopLocations(pythonWhileRegex, 'while-python', textWithoutComments);
 
     // Count matches in text without comments for accuracy
     const forMatches = (textWithoutComments.match(forRegex) || []).length;
+    const forEachMatches1 = (textWithoutComments.match(forEachRegex1) || []).length;
     const allWhileMatches = (textWithoutComments.match(whileRegex) || []).length;
     const doWhileMatches = (textWithoutComments.match(doWhileRegex) || []).length;
     const standaloneWhileMatches = allWhileMatches - doWhileMatches;
@@ -62,6 +66,7 @@ export const LoopCountMetric: Metric = {
 
     const loopMatches =
       forMatches +
+      forEachMatches1 +
       standaloneWhileMatches +
       doWhileMatches +
       forEachMatches +
