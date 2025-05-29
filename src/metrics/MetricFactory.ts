@@ -3,7 +3,7 @@ import { MetricRegistry } from './MetricRegistry';
 import { LineCountMetric } from './LineCountMetric';
 import { IfCountMetric } from './IfCountMetric';
 import { UsingCountMetric } from './common/UsingCountMetric';
-import { LoopCountMetric } from './LoopCountMetric';
+import { LoopCountMetric } from './common/LoopCountMetric';
 import { LambdaCountMetric } from './LambdaCountMetric';
 import { MethodCountMetric } from './common/MethodCountMetric';
 import { ClassCountMetric } from './ClassCountMetric';
@@ -40,7 +40,8 @@ export class MetricFactory {
       LineCountMetric,
       CodeDuplicationMetric,
       CodeDuplicationMetricV2,
-      UsingCountMetric
+      UsingCountMetric,
+      LoopCountMetric
     ];
 
     this.registry.registerCommonMetrics(commonMetrics);
@@ -51,7 +52,6 @@ export class MetricFactory {
       ClassCountMetric,
       MethodCountMetric,
       IfCountMetric,
-      LoopCountMetric,
       LambdaCountMetric,
       AverageMethodSizeMetric,
       MethodCohesionMetric,
@@ -69,7 +69,6 @@ export class MetricFactory {
     
     const javascriptMetrics: Metric[] = [
       IfCountMetric,
-      LoopCountMetric,
       LambdaCountMetric,
       MethodCountMetric,
       ClassCountMetric,
@@ -82,7 +81,6 @@ export class MetricFactory {
     
     const typescriptMetrics: Metric[] = [
       IfCountMetric,
-      LoopCountMetric,
       LambdaCountMetric,
       MethodCountMetric,
       ClassCountMetric,
@@ -96,7 +94,6 @@ export class MetricFactory {
     
     const pythonMetrics: Metric[] = [
       IfCountMetric,
-      LoopCountMetric,
       LambdaCountMetric,
       MethodCountMetricPython,
       ClassCountMetric,
@@ -110,7 +107,6 @@ export class MetricFactory {
     
     const javaMetrics: Metric[] = [
       IfCountMetric,
-      LoopCountMetric,
       LambdaCountMetric,
       MethodCountMetric,
       ClassCountMetric,
