@@ -1,4 +1,4 @@
-import { Metric, MetricResult } from './Metric';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
 export const NestingDepthMetric: Metric = {
@@ -55,7 +55,7 @@ export const NestingDepthMetric: Metric = {
     }
 
     return {
-      label: 'Profundidad máxima de bloques anidados',
+      label: 'Profundidad máxima de bloques anidados ',
       value: maxDepth,
       lineNumber: maxDepthLineIndex,
     };

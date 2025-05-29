@@ -9,7 +9,7 @@ import { MethodCountMetric } from './MethodCountMetric';
 import { ClassCountMetric } from './ClassCountMetric';
 import { AverageMethodSizeMetric } from './AverageMethodSizeMetric';
 import { MethodCohesionMetric } from './MethodCohesionMetric';
-import { NestingDepthMetric } from './NestingDepthMetric';
+import { NestingDepthMetric } from './common/NestingDepthMetric';
 import { CommentLineCountMetric } from './common/CommentLineCountMetric';
 import { CommentRatioMetric } from './common/CommentRatioMetric';
 import { CodeDuplicationMetric } from './CodeDuplicationMetric';
@@ -22,6 +22,7 @@ import { CognitiveComplexityMetric } from './CognitiveComplexityMetric';
 import { CommentLineCountMetricPython } from './python/CommentLineCountMetricPython';
 import { CommentRatioMetricPython } from './python/CommentRatioMetricPython';
 import { CodeDuplicationMetricV2 } from './common/CodeDuplicationMetricV2';
+import { NestingDepthMetricPython } from './python/NestingDepthMetricPython';
 
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
@@ -36,7 +37,6 @@ export class MetricFactory {
     const commonMetrics: Metric[] = [
       LineCountMetric,
       CodeDuplicationMetric,
-      NestingDepthMetric,
       CodeDuplicationMetricV2
     ];
 
@@ -100,7 +100,8 @@ export class MetricFactory {
       ClassCountMetric,
       CognitiveComplexityMetric,
       CommentLineCountMetricPython,
-      CommentRatioMetricPython
+      CommentRatioMetricPython,
+      NestingDepthMetricPython,
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
@@ -116,6 +117,7 @@ export class MetricFactory {
       CognitiveComplexityMetric,
       CommentLineCountMetric,
       CommentRatioMetric,
+
     ];
     this.registry.registerLanguageMetrics('java', javaMetrics);
   }
