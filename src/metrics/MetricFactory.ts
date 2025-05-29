@@ -2,7 +2,7 @@ import { Metric } from './Metric';
 import { MetricRegistry } from './MetricRegistry';
 import { LineCountMetric } from './LineCountMetric';
 import { IfCountMetric } from './IfCountMetric';
-import { UsingCountMetric } from './UsingCountMetric';
+import { UsingCountMetric } from './common/UsingCountMetric';
 import { LoopCountMetric } from './LoopCountMetric';
 import { LambdaCountMetric } from './LambdaCountMetric';
 import { MethodCountMetric } from './common/MethodCountMetric';
@@ -39,7 +39,8 @@ export class MetricFactory {
     const commonMetrics: Metric[] = [
       LineCountMetric,
       CodeDuplicationMetric,
-      CodeDuplicationMetricV2
+      CodeDuplicationMetricV2,
+      UsingCountMetric
     ];
 
     this.registry.registerCommonMetrics(commonMetrics);
@@ -47,7 +48,6 @@ export class MetricFactory {
 
   private static registerLanguageSpecificMetrics(): void {
     const csharpMetrics: Metric[] = [
-      UsingCountMetric,
       ClassCountMetric,
       MethodCountMetric,
       IfCountMetric,
@@ -103,7 +103,8 @@ export class MetricFactory {
       CommentLineCountMetricPython,
       CommentRatioMetricPython,
       NestingDepthMetricPython,
-      CognitiveComplexityMetricPython
+      CognitiveComplexityMetricPython,
+      
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
