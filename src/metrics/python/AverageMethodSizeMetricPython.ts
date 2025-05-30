@@ -38,6 +38,9 @@ export const AverageMethodSizeMetricPython: Metric = {
       methodStack: [] as PythonMethod[],
       currentMethodStartLine: 0,
       currentMethodName: '',
+      insideMethodSignature: false,
+      methodSignatureIndent: 0,
+      methodSignatureStartLine: 0,
     };
 
     function processMultilineString(trimmed: string): boolean {
@@ -166,9 +169,49 @@ export const AverageMethodSizeMetricPython: Metric = {
         continue;
       }
 
+      // Check if we're inside a method signature that spans multiple lines
+      if (state.insideMethodSignature) {
+        state.currentSize++;
+        // Check if the signature ends on this line (has a colon at the end)
+        if (trimmed.endsWith(':')) {
+          state.insideMethodSignature = false;
+          state.insideMethod = true;
+        }
+        continue;
+      }
+
       const isMethodDef = /^\s*(async\s+)?def\s+\w+/.test(trimmed);
       if (isMethodDef) {
-        handleMethodDefinition(line, i);
+        // Check if the method definition ends on this line
+        if (trimmed.endsWith(':')) {
+          handleMethodDefinition(line, i);
+        } else {
+          // This is a multi-line method signature
+          state.insideMethodSignature = true;
+          state.methodSignatureIndent = line.search(/\S/);
+          state.methodSignatureStartLine = i;
+          
+          // Start counting from this line
+          if (state.insideMethod) {
+            methodSizes.push(state.currentSize);
+            methodBlocks.push({
+              startLine: state.currentMethodStartLine,
+              endLine: i - 1,
+              size: state.currentSize,
+              name: state.currentMethodName
+            });
+            popMethodsFromStack(state.methodSignatureIndent, i);
+          }
+          
+          const methodNameMatch = line.match(/def\s+(\w+)/);
+          const methodName = methodNameMatch ? methodNameMatch[1] : '';
+          
+          state.insideMethod = false;
+          state.currentSize = 1 + state.decoratorsCount; // Count the first line of signature
+          state.decoratorsCount = 0;
+          state.currentMethodStartLine = i;
+          state.currentMethodName = methodName;
+        }
       } else if (state.insideMethod) {
         handleMethodContent(line, i);
       }

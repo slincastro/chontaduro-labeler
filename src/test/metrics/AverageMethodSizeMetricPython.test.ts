@@ -318,6 +318,38 @@ def method_with_empty_lines():
     // but with additional empty lines it's 7
     assert.strictEqual(result.value, 7);
   });
+
+  test('Should handle methods with multi-line signatures correctly', () => {
+    const document = createMockDocument(`
+@classmethod
+def create_context(
+    cls, user_id: str, email: str, *, chat_model: str = None, agent: Agent = None, context_id: str = None
+) -> Any:
+    with tracer.start_as_current_span("create new chat context"):
+        if context_id is None:
+            context_id = str(uuid.uuid1())
+        created_date = datetime.now()
+        session = ChatContext(
+            agent=agent,
+            user_id=user_id,
+            email=email,
+            context_id=context_id,
+            chat_model=chat_model,
+            created_date=created_date,
+            deleted=False,
+        )
+        db = cls.get_client()
+        db.collection("chat-context").document(context_id).set(session.dict())
+        return session
+    `);
+    const result = AverageMethodSizeMetricPython.extract(document);
+    
+    // @classmethod: 1 (decorator)
+    // def create_context(...): 3 (multi-line signature)
+    // method body: 13 lines
+    // Total: 17 lines
+    assert.strictEqual(result.value, 17);
+  });
 });
 
 function createMockDocument(content: string): vscode.TextDocument {
