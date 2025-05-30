@@ -17,7 +17,7 @@ let isLoading = false;
 MetricFactory.initializeRegistry();
 
 export function activate(context: vscode.ExtensionContext) {
-  output.appendLine("Activando extensión LineCounter");
+  output.appendLine("Activando extensión chontaduro");
   
   statusBarItem = vscode.window.createStatusBarItem(StatusBarAlignment.Right, 100);
   statusBarItem.text = "$(symbol-misc)";
@@ -190,12 +190,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         vscode.commands.executeCommand('chontaduro.startLoading');
       } else if (message.command === 'endOpenAIRequest') {
         vscode.commands.executeCommand('chontaduro.stopLoading');
-        this.update(); // Update the UI when OpenAI request is complete
+        this.update(); 
       } else if (message.command === 'highlightDuplicatedCode') {
-        // Get the current document
         const uri = this.csFiles[this.currentIndex];
         vscode.workspace.openTextDocument(uri).then(document => {
-          // Extract the duplicated blocks from the CodeDuplicationMetricV2 metric
           const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
           const codeDuplicationMetric = metrics.find(m => m.name === 'codeDuplicationV2');
           
@@ -317,14 +315,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
       // Add a button for LoopCountMetric at the top
       content += `
         <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f7ff; border-radius: 4px; border-left: 3px solid #4169E1;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <strong>Cantidad de bucles</strong>
-            </div>
-            <button onclick="highlightLoops()" style="background-color: #4169E1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-              Mostrar bucles
-            </button>
-          </div>
+
         </div>
       `;
       

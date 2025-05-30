@@ -1,4 +1,4 @@
-import { Metric, MetricResult } from './Metric';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
 export const LineCountMetric: Metric = {
