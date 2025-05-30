@@ -7,6 +7,7 @@ import { Metric, MetricResult } from './metrics/Metric';
 import { MetricFactory } from './metrics/MetricFactory';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { Webview } from './webview/view';
+import { HighlightManager } from './highlight/HighlightManager';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -124,27 +125,12 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private currentIndex: number = 0;
   private csvManager: MetricsCSVManager;
   private needsRefactoring: boolean = false;
-  private maxDepthDecorationType: vscode.TextEditorDecorationType;
-  private duplicatedCodeDecorationType: vscode.TextEditorDecorationType;
-  private duplicatedCodeDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
-  private methodDecorationTypes: Map<number, vscode.TextEditorDecorationType> = new Map();
+  private highlightManager: HighlightManager;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     const defaultMetrics = MetricFactory.getCommonMetrics();
     this.csvManager = new MetricsCSVManager(defaultMetrics, output);
-    
-    this.maxDepthDecorationType = vscode.window.createTextEditorDecorationType({
-      gutterIconPath: Uri.joinPath(this._extensionUri, 'media', 'icon-inverted.svg'),
-      gutterIconSize: 'contain',
-      overviewRulerColor: 'rgba(0, 122, 204, 0.7)',
-      overviewRulerLane: vscode.OverviewRulerLane.Right
-    });
-    
-    this.duplicatedCodeDecorationType = vscode.window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(255, 165, 0, 0.2)',
-      overviewRulerColor: 'rgba(255, 165, 0, 0.7)',
-      overviewRulerLane: vscode.OverviewRulerLane.Right
-    });
+    this.highlightManager = new HighlightManager(this._extensionUri);
   }
 
   public get hasView(): boolean {
@@ -267,10 +253,9 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   public update() {
     if (!this._view || this.csFiles.length === 0) return;
     
-    const currentEditor = vscode.window.activeTextEditor;
-    if (currentEditor) {
-      currentEditor.setDecorations(this.maxDepthDecorationType, []);
-    }
+    // Explicitly clear method highlights before updating
+    this.highlightManager.clearMethodHighlights();
+    this.highlightManager.clearAllHighlights();
 
     const uri = this.csFiles[this.currentIndex];
     vscode.workspace.openTextDocument(uri).then(document => {
@@ -291,19 +276,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         metricResults.push(result);
         
         if (metric.name === 'nestingDepth' && result.lineNumber !== undefined) {
-          const editor = vscode.window.activeTextEditor;
-          if (editor && editor.document.uri.toString() === uri.toString()) {
-            const position = new vscode.Position(result.lineNumber, 0);
-            const selection = new vscode.Selection(position, position);
-            editor.selection = selection;
-            editor.revealRange(
-              new vscode.Range(position, position),
-              vscode.TextEditorRevealType.InCenter
-            );
-            
-            const range = new vscode.Range(position, position);
-            editor.setDecorations(this.maxDepthDecorationType, [range]);
-          }
+          this.highlightManager.highlightMaxDepth(document, result.lineNumber);
         }
       }
       
@@ -552,10 +525,9 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   public async navigateFile(direction: 'next' | 'prev') {
     if (this.csFiles.length === 0) return;
     
-    const editor = vscode.window.activeTextEditor;
-    if (editor) {
-      editor.setDecorations(this.maxDepthDecorationType, []);
-    }
+    // Explicitly clear method highlights before navigating
+    this.highlightManager.clearMethodHighlights();
+    this.highlightManager.clearAllHighlights();
 
     if (direction === 'next' && this.currentIndex >= 0 && this.currentIndex < this.csFiles.length) {
       const currentUri = this.csFiles[this.currentIndex];
@@ -630,116 +602,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
   
   private highlightDuplicatedCode(document: vscode.TextDocument, duplicatedBlocks: { startLine: number, endLine: number, blockId?: string }[]) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
-      return;
-    }
-    
-    // Clear any existing decorations
-    editor.setDecorations(this.duplicatedCodeDecorationType, []);
-    this.duplicatedCodeDecorationTypes.forEach(decorationType => {
-      editor.setDecorations(decorationType, []);
-    });
-    
-    // Define a set of colors for different block IDs
-    const colors = [
-      'rgba(255, 165, 0, 0.2)', // Orange
-      'rgba(0, 128, 255, 0.2)',  // Blue
-      'rgba(255, 0, 0, 0.2)',    // Red
-      'rgba(0, 255, 0, 0.2)',    // Green
-      'rgba(128, 0, 128, 0.2)',  // Purple
-      'rgba(255, 192, 203, 0.2)', // Pink
-      'rgba(0, 255, 255, 0.2)',  // Cyan
-      'rgba(255, 255, 0, 0.2)'   // Yellow
-    ];
-    
-    // Group blocks by blockId
-    const blocksByBlockId = new Map<string, { startLine: number, endLine: number }[]>();
-    const blocksWithoutId: { startLine: number, endLine: number }[] = [];
-    
-    for (const block of duplicatedBlocks) {
-      if (block.blockId) {
-        // Block has an ID, group it
-        if (!blocksByBlockId.has(block.blockId)) {
-          blocksByBlockId.set(block.blockId, []);
-        }
-        blocksByBlockId.get(block.blockId)?.push({
-          startLine: block.startLine,
-          endLine: block.endLine
-        });
-      } else {
-        // Block doesn't have an ID, add to the list of blocks without ID
-        blocksWithoutId.push({
-          startLine: block.startLine,
-          endLine: block.endLine
-        });
-      }
-    }
-    
-    // Handle blocks without ID using the original decoration type
-    if (blocksWithoutId.length > 0) {
-      const ranges: vscode.Range[] = [];
-      
-      for (const block of blocksWithoutId) {
-        const startPos = new vscode.Position(block.startLine, 0);
-        const endPos = new vscode.Position(block.endLine, document.lineAt(block.endLine).text.length);
-        ranges.push(new vscode.Range(startPos, endPos));
-      }
-      
-      editor.setDecorations(this.duplicatedCodeDecorationType, ranges);
-    }
-    
-    // Create and apply decorations for each blockId
-    let colorIndex = 0;
-    blocksByBlockId.forEach((blocks, blockId) => {
-      // Create a decoration type for this blockId if it doesn't exist
-      if (!this.duplicatedCodeDecorationTypes.has(blockId)) {
-        const color = colors[colorIndex % colors.length];
-        const rulerColor = color.replace('0.2', '0.7');
-        
-        this.duplicatedCodeDecorationTypes.set(blockId, vscode.window.createTextEditorDecorationType({
-          backgroundColor: color,
-          overviewRulerColor: rulerColor,
-          overviewRulerLane: vscode.OverviewRulerLane.Right,
-          before: {
-            contentText: `${blockId} `,
-            color: 'white',
-            backgroundColor: rulerColor,
-            margin: '0 5px 0 0',
-            border: '1px solid black'
-          }
-        }));
-        
-        colorIndex++;
-      }
-      
-      // Create ranges for all blocks with this blockId
-      const ranges: vscode.Range[] = [];
-      
-      for (const block of blocks) {
-        const startPos = new vscode.Position(block.startLine, 0);
-        const endPos = new vscode.Position(block.endLine, document.lineAt(block.endLine).text.length);
-        ranges.push(new vscode.Range(startPos, endPos));
-      }
-      
-      // Apply the decorations
-      const decorationType = this.duplicatedCodeDecorationTypes.get(blockId);
-      if (decorationType) {
-        editor.setDecorations(decorationType, ranges);
-      }
-    });
-    
-    // Scroll to the first duplicated block if there is one
-    if (duplicatedBlocks.length > 0) {
-      const firstBlock = duplicatedBlocks[0];
-      const startPos = new vscode.Position(firstBlock.startLine, 0);
-      const endPos = new vscode.Position(firstBlock.endLine, document.lineAt(firstBlock.endLine).text.length);
-      
-      editor.revealRange(
-        new vscode.Range(startPos, endPos),
-        vscode.TextEditorRevealType.InCenter
-      );
-    }
+    this.highlightManager.highlightDuplicatedCode(document, duplicatedBlocks);
   }
   
   private saveSettings(settings: { apiKey: string, model: string }) {
@@ -752,117 +615,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
   
   private highlightMethods(document: vscode.TextDocument, methodBlocks: { startLine: number, endLine: number, size: number, name?: string }[]) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
-      return;
-    }
-    
-    // Clear any existing method decorations
-    this.methodDecorationTypes.forEach(decorationType => {
-      editor.setDecorations(decorationType, []);
-    });
-    
-    // Define a set of colors for different methods
-    const colors = [
-      'rgba(255, 165, 0, 0.2)',  // Orange
-      'rgba(0, 128, 255, 0.2)',  // Blue
-      'rgba(255, 0, 0, 0.2)',    // Red
-      'rgba(0, 255, 0, 0.2)',    // Green
-      'rgba(128, 0, 128, 0.2)',  // Purple
-      'rgba(255, 192, 203, 0.2)', // Pink
-      'rgba(0, 255, 255, 0.2)',  // Cyan
-      'rgba(255, 255, 0, 0.2)'   // Yellow
-    ];
-    
-    // Create decorations for each method
-    methodBlocks.forEach((block, index) => {
-      const colorIndex = index % colors.length;
-      const color = colors[colorIndex];
-      const rulerColor = color.replace('0.2', '0.7');
-      
-      // Create a decoration type for this method if it doesn't exist
-      if (!this.methodDecorationTypes.has(index)) {
-        this.methodDecorationTypes.set(index, vscode.window.createTextEditorDecorationType({
-          backgroundColor: color,
-          overviewRulerColor: rulerColor,
-          overviewRulerLane: vscode.OverviewRulerLane.Right,
-          before: {
-            contentText: `${block.name || 'Method'} (${block.size} líneas) `,
-            color: 'black',
-            backgroundColor: color,
-            margin: '0 5px 0 0',
-            border: '1px solid black'
-          }
-        }));
-      }
-      
-      // Create range for this method
-      const startPos = new vscode.Position(block.startLine, 0);
-      const endPos = new vscode.Position(block.endLine, document.lineAt(Math.min(block.endLine, document.lineCount - 1)).text.length);
-      const range = new vscode.Range(startPos, endPos);
-      
-      // Apply the decoration
-      const decorationType = this.methodDecorationTypes.get(index);
-      if (decorationType) {
-        editor.setDecorations(decorationType, [range]);
-      }
-    });
-    
-    // Scroll to the first method if there is one
-    if (methodBlocks.length > 0) {
-      const firstBlock = methodBlocks[0];
-      const startPos = new vscode.Position(firstBlock.startLine, 0);
-      const endPos = new vscode.Position(firstBlock.endLine, document.lineAt(Math.min(firstBlock.endLine, document.lineCount - 1)).text.length);
-      
-      editor.revealRange(
-        new vscode.Range(startPos, endPos),
-        vscode.TextEditorRevealType.InCenter
-      );
-    }
+    this.highlightManager.highlightMethods(document, methodBlocks);
   }
   
   private highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]) {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
-      return;
-    }
-    
-    // Create a decoration type for loops
-    const loopDecorationType = vscode.window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(65, 105, 225, 0.2)', // Royal blue with transparency
-      overviewRulerColor: 'rgba(65, 105, 225, 0.7)',
-      overviewRulerLane: vscode.OverviewRulerLane.Right,
-      before: {
-        contentText: '⟳ ', // Loop symbol
-        color: '#4169E1',
-        margin: '0 5px 0 0'
-      }
-    });
-    
-    // Create ranges for all loop blocks
-    const ranges: vscode.Range[] = [];
-    
-    for (const block of loopBlocks) {
-      const startPos = new vscode.Position(block.startLine, 0);
-      // For the end position, use the end of the line
-      const endPos = new vscode.Position(block.startLine, document.lineAt(block.startLine).text.length);
-      ranges.push(new vscode.Range(startPos, endPos));
-    }
-    
-    // Apply the decorations
-    editor.setDecorations(loopDecorationType, ranges);
-    
-    // Scroll to the first loop if there is one
-    if (loopBlocks.length > 0) {
-      const firstBlock = loopBlocks[0];
-      const startPos = new vscode.Position(firstBlock.startLine, 0);
-      const endPos = new vscode.Position(firstBlock.startLine, document.lineAt(firstBlock.startLine).text.length);
-      
-      editor.revealRange(
-        new vscode.Range(startPos, endPos),
-        vscode.TextEditorRevealType.InCenter
-      );
-    }
+    this.highlightManager.highlightLoops(document, loopBlocks);
   }
   
 }
