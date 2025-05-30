@@ -8,6 +8,7 @@ import { MetricFactory } from './metrics/MetricFactory';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { Webview } from './webview/view';
 import { HighlightManager } from './highlight/HighlightManager';
+import { NavigationManager } from './navigation/NavigationManager';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -121,14 +122,14 @@ export function stopLoading() {
 
 class LineCountViewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
-  private csFiles: vscode.Uri[] = [];
-  private currentIndex: number = 0;
+  private navigationManager: NavigationManager;
   private csvManager: MetricsCSVManager;
   private needsRefactoring: boolean = false;
   private highlightManager: HighlightManager;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     const defaultMetrics = MetricFactory.getCommonMetrics();
+    this.navigationManager = new NavigationManager(this._extensionUri, output);
     this.csvManager = new MetricsCSVManager(defaultMetrics, output);
     this.highlightManager = new HighlightManager(this._extensionUri);
   }
@@ -179,7 +180,9 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         vscode.commands.executeCommand('chontaduro.stopLoading');
         this.update(); 
       } else if (message.command === 'highlightDuplicatedCode') {
-        const uri = this.csFiles[this.currentIndex];
+        if (!this.navigationManager.currentFile) return;
+        
+        const uri = this.navigationManager.currentFile;
         vscode.workspace.openTextDocument(uri).then(document => {
           const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
           const codeDuplicationMetric = metrics.find(m => m.name === 'codeDuplicationV2');
@@ -194,8 +197,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
           }
         });
       } else if (message.command === 'highlightLoops') {
+        if (!this.navigationManager.currentFile) return;
+        
         // Get the current document
-        const uri = this.csFiles[this.currentIndex];
+        const uri = this.navigationManager.currentFile;
         vscode.workspace.openTextDocument(uri).then(document => {
           // Extract the loop blocks from the LoopCountMetric
           const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
@@ -211,8 +216,10 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
           }
         });
       } else if (message.command === 'highlightMethods') {
+        if (!this.navigationManager.currentFile) return;
+        
         // Get the current document
-        const uri = this.csFiles[this.currentIndex];
+        const uri = this.navigationManager.currentFile;
         vscode.workspace.openTextDocument(uri).then(document => {
           // Extract the method blocks from the AverageMethodSizeMetric
           const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
@@ -238,26 +245,17 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
   private async loadProjectFiles() {
-    const csFiles = await vscode.workspace.findFiles('**/*.cs', '**/node_modules/**');
-    const pyFiles = await vscode.workspace.findFiles('**/*.py', '**/node_modules/**');
-    
-    this.csFiles = [...csFiles, ...pyFiles].sort((a, b) => a.fsPath.localeCompare(b.fsPath));
-    
-    const activeUri = vscode.window.activeTextEditor?.document.uri;
-    this.currentIndex = this.csFiles.findIndex(uri => uri.toString() === activeUri?.toString());
-    if (this.currentIndex === -1 && this.csFiles.length > 0) {
-      this.currentIndex = 0;
-    }
+    await this.navigationManager.loadProjectFiles();
   }
 
   public update() {
-    if (!this._view || this.csFiles.length === 0) return;
+    if (!this._view || !this.navigationManager.hasFiles) return;
     
     // Explicitly clear method highlights before updating
     this.highlightManager.clearMethodHighlights();
     this.highlightManager.clearAllHighlights();
 
-    const uri = this.csFiles[this.currentIndex];
+    const uri = this.navigationManager.currentFile!;
     vscode.workspace.openTextDocument(uri).then(document => {
       const fileName = uri.fsPath.split('/').pop() || 'Archivo';
       
@@ -523,39 +521,25 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
   public async navigateFile(direction: 'next' | 'prev') {
-    if (this.csFiles.length === 0) return;
+    if (!this.navigationManager.hasFiles) return;
     
     // Explicitly clear method highlights before navigating
     this.highlightManager.clearMethodHighlights();
     this.highlightManager.clearAllHighlights();
 
-    if (direction === 'next' && this.currentIndex >= 0 && this.currentIndex < this.csFiles.length) {
-      const currentUri = this.csFiles[this.currentIndex];
-      try {
-        const currentDoc = await vscode.workspace.openTextDocument(currentUri);
-        const metrics = MetricFactory.getMetricsForLanguage(currentDoc.languageId.toLowerCase());
-        this.csvManager = new MetricsCSVManager(metrics, output);
-        this.csvManager.saveMetricsToCSV(currentDoc, this.needsRefactoring);
-        
-        this.needsRefactoring = false;
-        
-        if (this._view) {
-          this._view.webview.postMessage({ command: 'resetRefactoringCheckbox' });
-        }
-      } catch (error) {
-        output.appendLine(`Error saving metrics before navigation: ${error}`);
-      }
+    // Set the refactoring flag in the navigation manager
+    this.navigationManager.setNeedsRefactoring(this.needsRefactoring);
+    
+    // Navigate to the next/previous file
+    await this.navigationManager.navigateFile(direction);
+    
+    // Reset the refactoring flag
+    this.needsRefactoring = false;
+    
+    if (this._view) {
+      this._view.webview.postMessage({ command: 'resetRefactoringCheckbox' });
     }
-
-    if (direction === 'next') {
-      this.currentIndex = (this.currentIndex + 1) % this.csFiles.length;
-    } else if (direction === 'prev') {
-      this.currentIndex = (this.currentIndex - 1 + this.csFiles.length) % this.csFiles.length;
-    }
-
-    const uri = this.csFiles[this.currentIndex];
-    const doc = await vscode.workspace.openTextDocument(uri);
-    await vscode.window.showTextDocument(doc, { preview: false });
+    
     this.update();
   }
 
