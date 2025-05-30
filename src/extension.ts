@@ -153,9 +153,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         this.navigateFile(message.direction);
       } else if (message.command === 'toggleRefactoring') {
         this.needsRefactoring = message.checked;
-        output.appendLine(`Refactoring flag set to: ${this.needsRefactoring}`);
       } else if (message.command === 'webviewReady') {
-        output.appendLine('Webview is ready');
         
         if (this.currentLanguageInfo && this._view) {
           output.appendLine(`Sending language info after webview ready: ${this.currentLanguageInfo.name}`);
@@ -196,11 +194,8 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
         });
       } else if (message.command === 'highlightLoops') {
         if (!this.navigationManager.currentFile) return;
-        
-        // Get the current document
-        const uri = this.navigationManager.currentFile;
+                const uri = this.navigationManager.currentFile;
         vscode.workspace.openTextDocument(uri).then(document => {
-          // Extract the loop blocks from the LoopCountMetric
           const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
           const loopCountMetric = metrics.find(m => m.name === 'loopCount');
           
