@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Uri, StatusBarAlignment } from 'vscode';
+import { StatusBarAlignment } from 'vscode';
 import { MetricsCSVManager } from './csv/MetricsCSVManager';
-import { Metric, MetricResult } from './metrics/Metric';
 import { MetricFactory } from './metrics/MetricFactory';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
-import { Webview } from './webview/view';
 import { NavigationManager } from './navigation/NavigationManager';
 import { MetricsRenderer } from './metrics/MetricsRenderer';
 
