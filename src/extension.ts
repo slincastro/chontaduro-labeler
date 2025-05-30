@@ -7,6 +7,21 @@ import { MetricFactory } from './metrics/MetricFactory';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { NavigationManager } from './navigation/NavigationManager';
 import { MetricsRenderer } from './metrics/MetricsRenderer';
+import { MessageHandlerRegistry } from './webview/MessageHandlerRegistry';
+import { 
+  ILineCountViewProvider,
+  NavigateHandler,
+  ToggleRefactoringHandler,
+  WebviewReadyHandler,
+  OpenCsvFileHandler,
+  GetSettingsHandler,
+  SaveSettingsHandler,
+  StartOpenAIRequestHandler,
+  EndOpenAIRequestHandler,
+  HighlightDuplicatedCodeHandler,
+  HighlightLoopsHandler,
+  HighlightMethodsHandler
+} from './webview/MessageHandlers';
 
 const output = vscode.window.createOutputChannel("LineCounter");
 output.appendLine('Canal LineCounter iniciado');
@@ -118,12 +133,13 @@ export function stopLoading() {
 }
 
 
-class LineCountViewProvider implements vscode.WebviewViewProvider {
-  private _view?: vscode.WebviewView;
-  private navigationManager: NavigationManager;
-  private csvManager: MetricsCSVManager;
-  private needsRefactoring: boolean = false;
-  private metricsRenderer: MetricsRenderer;
+export class LineCountViewProvider implements vscode.WebviewViewProvider, ILineCountViewProvider {
+  public _view?: vscode.WebviewView;
+  public navigationManager: NavigationManager;
+  public csvManager: MetricsCSVManager;
+  public needsRefactoring: boolean = false;
+  public metricsRenderer: MetricsRenderer;
+  public currentLanguageInfo?: LanguageInfo;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     const defaultMetrics = MetricFactory.getCommonMetrics();
@@ -136,7 +152,21 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     return !!this._view;
   }
 
-  private currentLanguageInfo?: LanguageInfo;
+  private messageHandlerRegistry = new MessageHandlerRegistry();
+
+  private initializeMessageHandlers(): void {
+    this.messageHandlerRegistry.registerHandler('navigate', new NavigateHandler());
+    this.messageHandlerRegistry.registerHandler('toggleRefactoring', new ToggleRefactoringHandler());
+    this.messageHandlerRegistry.registerHandler('webviewReady', new WebviewReadyHandler());
+    this.messageHandlerRegistry.registerHandler('openCsvFile', new OpenCsvFileHandler());
+    this.messageHandlerRegistry.registerHandler('getSettings', new GetSettingsHandler());
+    this.messageHandlerRegistry.registerHandler('saveSettings', new SaveSettingsHandler());
+    this.messageHandlerRegistry.registerHandler('startOpenAIRequest', new StartOpenAIRequestHandler());
+    this.messageHandlerRegistry.registerHandler('endOpenAIRequest', new EndOpenAIRequestHandler());
+    this.messageHandlerRegistry.registerHandler('highlightDuplicatedCode', new HighlightDuplicatedCodeHandler());
+    this.messageHandlerRegistry.registerHandler('highlightLoops', new HighlightLoopsHandler());
+    this.messageHandlerRegistry.registerHandler('highlightMethods', new HighlightMethodsHandler());
+  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -146,87 +176,15 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true };
 
+    if (this.messageHandlerRegistry.getRegisteredCommands().length === 0) {
+      this.initializeMessageHandlers();
+    }
+
     webviewView.webview.onDidReceiveMessage(message => {
       output.appendLine(`Received message from webview: ${message.command}`);
       
-      if (message.command === 'navigate') {
-        this.navigateFile(message.direction);
-      } else if (message.command === 'toggleRefactoring') {
-        this.needsRefactoring = message.checked;
-      } else if (message.command === 'webviewReady') {
-        
-        if (this.currentLanguageInfo && this._view) {
-          output.appendLine(`Sending language info after webview ready: ${this.currentLanguageInfo.name}`);
-          this._view.webview.postMessage({
-            command: 'setLanguageInfo',
-            name: this.currentLanguageInfo.name,
-            icon: this.currentLanguageInfo.icon,
-            color: this.currentLanguageInfo.color
-          });
-        }
-      } else if (message.command === 'openCsvFile') {
-        this.openCsvFile();
-      } else if (message.command === 'getSettings') {
-        this.sendSettings();
-      } else if (message.command === 'saveSettings') {
-        this.saveSettings(message.settings);
-      } else if (message.command === 'startOpenAIRequest') {
-        vscode.commands.executeCommand('chontaduro.startLoading');
-      } else if (message.command === 'endOpenAIRequest') {
-        vscode.commands.executeCommand('chontaduro.stopLoading');
-        this.update(); 
-      } else if (message.command === 'highlightDuplicatedCode') {
-        if (!this.navigationManager.currentFile) return;
-        
-        const uri = this.navigationManager.currentFile;
-        vscode.workspace.openTextDocument(uri).then(document => {
-          const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
-          const codeDuplicationMetric = metrics.find(m => m.name === 'codeDuplicationV2');
-          
-          if (codeDuplicationMetric) {
-            const result = codeDuplicationMetric.extract(document);
-            if (result.duplicatedBlocks && result.duplicatedBlocks.length > 0) {
-              this.highlightDuplicatedCode(document, result.duplicatedBlocks);
-            } else {
-              vscode.window.showInformationMessage('No se encontraron bloques de código duplicados.');
-            }
-          }
-        });
-      } else if (message.command === 'highlightLoops') {
-        if (!this.navigationManager.currentFile) return;
-                const uri = this.navigationManager.currentFile;
-        vscode.workspace.openTextDocument(uri).then(document => {
-          const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
-          const loopCountMetric = metrics.find(m => m.name === 'loopCount');
-          
-          if (loopCountMetric) {
-            const result = loopCountMetric.extract(document);
-            if (result.loopBlocks && result.loopBlocks.length > 0) {
-              this.highlightLoops(document, result.loopBlocks);
-            } else {
-              vscode.window.showInformationMessage('No se encontraron bucles en el código.');
-            }
-          }
-        });
-      } else if (message.command === 'highlightMethods') {
-        if (!this.navigationManager.currentFile) return;
-        
-        const uri = this.navigationManager.currentFile;
-        vscode.workspace.openTextDocument(uri).then(document => {
-          const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
-          const methodSizeMetric = metrics.find(m => 
-            m.name === 'averageMethodSize' || m.name === 'averageMethodSizePython'
-          );
-          
-          if (methodSizeMetric) {
-            const result = methodSizeMetric.extract(document);
-            if (result.methodBlocks && result.methodBlocks.length > 0) {
-              this.highlightMethods(document, result.methodBlocks);
-            } else {
-              vscode.window.showInformationMessage('No se encontraron métodos en el código.');
-            }
-          }
-        });
+      if (!this.messageHandlerRegistry.dispatch(message, this)) {
+        output.appendLine(`No handler registered for command: ${message.command}`);
       }
     });
 
@@ -282,7 +240,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   }
 
 
-  private openCsvFile() {
+  public openCsvFile() {
     const csvFilePath = this.getCsvFilePath();
     
     if (csvFilePath && fs.existsSync(csvFilePath)) {
@@ -341,7 +299,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     this._view.webview.postMessage({ command: 'openSettings' });
   }
   
-  private sendSettings() {
+  public sendSettings() {
     if (!this._view) return;
     
     const config = vscode.workspace.getConfiguration('lineCounter');
@@ -359,11 +317,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     output.appendLine('Sent settings to webview');
   }
   
-  private highlightDuplicatedCode(document: vscode.TextDocument, duplicatedBlocks: { startLine: number, endLine: number, blockId?: string }[]) {
+  public highlightDuplicatedCode(document: vscode.TextDocument, duplicatedBlocks: { startLine: number, endLine: number, blockId?: string }[]) {
     this.metricsRenderer.highlightDuplicatedCode(document, duplicatedBlocks);
   }
   
-  private saveSettings(settings: { apiKey: string, model: string }) {
+  public saveSettings(settings: { apiKey: string, model: string }) {
     const config = vscode.workspace.getConfiguration('lineCounter');
     config.update('openai.apiKey', settings.apiKey, true);
     config.update('openai.model', settings.model, true);
@@ -372,11 +330,11 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     vscode.window.showInformationMessage('Configuración de OpenAI guardada correctamente');
   }
   
-  private highlightMethods(document: vscode.TextDocument, methodBlocks: { startLine: number, endLine: number, size: number, name?: string }[]) {
+  public highlightMethods(document: vscode.TextDocument, methodBlocks: { startLine: number, endLine: number, size: number, name?: string }[]) {
     this.metricsRenderer.highlightMethods(document, methodBlocks);
   }
   
-  private highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]) {
+  public highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]) {
     this.metricsRenderer.highlightLoops(document, loopBlocks);
   }
   
