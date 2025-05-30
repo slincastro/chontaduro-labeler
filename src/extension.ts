@@ -127,6 +127,7 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
   private maxDepthDecorationType: vscode.TextEditorDecorationType;
   private duplicatedCodeDecorationType: vscode.TextEditorDecorationType;
   private duplicatedCodeDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
+  private methodDecorationTypes: Map<number, vscode.TextEditorDecorationType> = new Map();
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     const defaultMetrics = MetricFactory.getCommonMetrics();
@@ -220,6 +221,25 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
               this.highlightLoops(document, result.loopBlocks);
             } else {
               vscode.window.showInformationMessage('No se encontraron bucles en el código.');
+            }
+          }
+        });
+      } else if (message.command === 'highlightMethods') {
+        // Get the current document
+        const uri = this.csFiles[this.currentIndex];
+        vscode.workspace.openTextDocument(uri).then(document => {
+          // Extract the method blocks from the AverageMethodSizeMetric
+          const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+          const methodSizeMetric = metrics.find(m => 
+            m.name === 'averageMethodSize' || m.name === 'averageMethodSizePython'
+          );
+          
+          if (methodSizeMetric) {
+            const result = methodSizeMetric.extract(document);
+            if (result.methodBlocks && result.methodBlocks.length > 0) {
+              this.highlightMethods(document, result.methodBlocks);
+            } else {
+              vscode.window.showInformationMessage('No se encontraron métodos en el código.');
             }
           }
         });
@@ -330,8 +350,14 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
             output.appendLine(`Metric: ${m.name}, Label: ${extractedResult.label}, Result Label: ${result.label}`);
             
             // Check if the labels match or if this is the loopCount metric and the result label is "Cantidad de bucles"
-            return extractedResult.label === result.label || 
+            const isMatch = extractedResult.label === result.label || 
                   (m.name === 'loopCount' && result.label === 'Cantidad de bucles');
+            
+            if (isMatch) {
+              output.appendLine(`Found matching metric: ${m.name}`);
+            }
+            
+            return isMatch;
           });
           
           content += `
@@ -348,7 +374,9 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
                 <p>Valor: ${result.value}</p>
                 <p>Métrica: ${result.label}</p>
                 ${result.lineNumber !== undefined ? `<p>Línea: ${result.lineNumber + 1}</p>` : ''}
+                <p>Name : ${metric?.name}</p>
                 <p>Esta métrica indica ${metric?.description || 'información sobre la calidad del código.'}</p>
+                
                 ${metric?.name === 'codeDuplicationV2' ? `
                 <div style="margin-top: 15px;">
                   <button onclick="highlightDuplicatedCode()" style="background-color: #0078d7; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
@@ -360,6 +388,13 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
                 <div style="margin-top: 15px;">
                   <button onclick="highlightLoops()" style="background-color: #4169E1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
                     Mostrar bucles
+                  </button>
+                </div>
+                ` : ''}
+                ${metric?.name === 'averageMethodSizePython' || result.label === 'Tamaño promedio de métodos (Python)' ? `
+                <div style="margin-top: 15px;">
+                  <button onclick="highlightMethods()" style="background-color: #9932CC; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                    Mostrar métodos
                   </button>
                 </div>
                 ` : ''}
@@ -714,6 +749,76 @@ class LineCountViewProvider implements vscode.WebviewViewProvider {
     
     output.appendLine('Saved settings to configuration');
     vscode.window.showInformationMessage('Configuración de OpenAI guardada correctamente');
+  }
+  
+  private highlightMethods(document: vscode.TextDocument, methodBlocks: { startLine: number, endLine: number, size: number, name?: string }[]) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
+      return;
+    }
+    
+    // Clear any existing method decorations
+    this.methodDecorationTypes.forEach(decorationType => {
+      editor.setDecorations(decorationType, []);
+    });
+    
+    // Define a set of colors for different methods
+    const colors = [
+      'rgba(255, 165, 0, 0.2)',  // Orange
+      'rgba(0, 128, 255, 0.2)',  // Blue
+      'rgba(255, 0, 0, 0.2)',    // Red
+      'rgba(0, 255, 0, 0.2)',    // Green
+      'rgba(128, 0, 128, 0.2)',  // Purple
+      'rgba(255, 192, 203, 0.2)', // Pink
+      'rgba(0, 255, 255, 0.2)',  // Cyan
+      'rgba(255, 255, 0, 0.2)'   // Yellow
+    ];
+    
+    // Create decorations for each method
+    methodBlocks.forEach((block, index) => {
+      const colorIndex = index % colors.length;
+      const color = colors[colorIndex];
+      const rulerColor = color.replace('0.2', '0.7');
+      
+      // Create a decoration type for this method if it doesn't exist
+      if (!this.methodDecorationTypes.has(index)) {
+        this.methodDecorationTypes.set(index, vscode.window.createTextEditorDecorationType({
+          backgroundColor: color,
+          overviewRulerColor: rulerColor,
+          overviewRulerLane: vscode.OverviewRulerLane.Right,
+          before: {
+            contentText: `${block.name || 'Method'} (${block.size} líneas) `,
+            color: 'black',
+            backgroundColor: color,
+            margin: '0 5px 0 0',
+            border: '1px solid black'
+          }
+        }));
+      }
+      
+      // Create range for this method
+      const startPos = new vscode.Position(block.startLine, 0);
+      const endPos = new vscode.Position(block.endLine, document.lineAt(Math.min(block.endLine, document.lineCount - 1)).text.length);
+      const range = new vscode.Range(startPos, endPos);
+      
+      // Apply the decoration
+      const decorationType = this.methodDecorationTypes.get(index);
+      if (decorationType) {
+        editor.setDecorations(decorationType, [range]);
+      }
+    });
+    
+    // Scroll to the first method if there is one
+    if (methodBlocks.length > 0) {
+      const firstBlock = methodBlocks[0];
+      const startPos = new vscode.Position(firstBlock.startLine, 0);
+      const endPos = new vscode.Position(firstBlock.endLine, document.lineAt(Math.min(firstBlock.endLine, document.lineCount - 1)).text.length);
+      
+      editor.revealRange(
+        new vscode.Range(startPos, endPos),
+        vscode.TextEditorRevealType.InCenter
+      );
+    }
   }
   
   private highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]) {

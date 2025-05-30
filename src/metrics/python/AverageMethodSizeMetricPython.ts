@@ -1,6 +1,13 @@
 import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
+interface MethodBlock {
+  startLine: number;
+  endLine: number;
+  size: number;
+  name?: string;
+}
+
 /**
  * Metric that calculates the average method size in Python code.
  */
@@ -12,10 +19,13 @@ export const AverageMethodSizeMetricPython: Metric = {
     const text = document.getText();
     const lines = text.split('\n');
     const methodSizes: number[] = [];
+    const methodBlocks: MethodBlock[] = [];
 
     interface PythonMethod {
       indent: number;
       size: number;
+      startLine: number;
+      name?: string;
     }
 
     const state = {
@@ -26,6 +36,8 @@ export const AverageMethodSizeMetricPython: Metric = {
       insideMultilineString: false,
       multilineStringDelimiter: '',
       methodStack: [] as PythonMethod[],
+      currentMethodStartLine: 0,
+      currentMethodName: '',
     };
 
     function processMultilineString(trimmed: string): boolean {
@@ -51,58 +63,94 @@ export const AverageMethodSizeMetricPython: Metric = {
       return false;
     }
 
-    function popMethodsFromStack(currentIndent: number): void {
+    function popMethodsFromStack(currentIndent: number, currentLine: number): void {
       while (
         state.methodStack.length > 0 &&
         state.methodStack[state.methodStack.length - 1].indent >= currentIndent
       ) {
         const popped = state.methodStack.pop()!;
         methodSizes.push(popped.size);
+        methodBlocks.push({
+          startLine: popped.startLine,
+          endLine: currentLine - 1,
+          size: popped.size,
+          name: popped.name
+        });
       }
     }
 
-    function handleMethodDefinition(line: string): void {
+    function handleMethodDefinition(line: string, lineIndex: number): void {
       const indent = line.search(/\S/);
+      const methodNameMatch = line.match(/def\s+(\w+)/);
+      const methodName = methodNameMatch ? methodNameMatch[1] : '';
 
       if (state.insideMethod && indent > state.methodIndent) {
         state.methodStack.push({
           indent: state.methodIndent,
           size: state.currentSize,
+          startLine: state.currentMethodStartLine,
+          name: state.currentMethodName
         });
       } else if (state.insideMethod) {
         methodSizes.push(state.currentSize);
-        popMethodsFromStack(indent);
+        methodBlocks.push({
+          startLine: state.currentMethodStartLine,
+          endLine: lineIndex - 1,
+          size: state.currentSize,
+          name: state.currentMethodName
+        });
+        popMethodsFromStack(indent, lineIndex);
       }
 
       state.insideMethod = true;
       state.methodIndent = indent;
       state.currentSize = 1 + state.decoratorsCount;
       state.decoratorsCount = 0;
+      state.currentMethodStartLine = lineIndex;
+      state.currentMethodName = methodName;
     }
 
-    function handleMethodContent(line: string): void {
+    function handleMethodContent(line: string, lineIndex: number): void {
       const trimmed = line.trim();
       const indent = line.search(/\S/);
 
       if (indent !== -1 && indent <= state.methodIndent && trimmed !== '') {
         methodSizes.push(state.currentSize);
+        methodBlocks.push({
+          startLine: state.currentMethodStartLine,
+          endLine: lineIndex - 1,
+          size: state.currentSize,
+          name: state.currentMethodName
+        });
         state.insideMethod = false;
-        popMethodsFromStack(indent);
+        popMethodsFromStack(indent, lineIndex);
         state.decoratorsCount = 0;
       } else {
         state.currentSize++;
       }
     }
 
-    function finalize(): void {
+    function finalize(lastLineIndex: number): void {
       if (state.insideMethod) {
         methodSizes.push(state.currentSize);
+        methodBlocks.push({
+          startLine: state.currentMethodStartLine,
+          endLine: lastLineIndex,
+          size: state.currentSize,
+          name: state.currentMethodName
+        });
         state.insideMethod = false;
       }
 
       while (state.methodStack.length > 0) {
         const popped = state.methodStack.pop()!;
         methodSizes.push(popped.size);
+        methodBlocks.push({
+          startLine: popped.startLine,
+          endLine: lastLineIndex,
+          size: popped.size,
+          name: popped.name
+        });
       }
     }
 
@@ -120,13 +168,13 @@ export const AverageMethodSizeMetricPython: Metric = {
 
       const isMethodDef = /^\s*(async\s+)?def\s+\w+/.test(trimmed);
       if (isMethodDef) {
-        handleMethodDefinition(line);
+        handleMethodDefinition(line, i);
       } else if (state.insideMethod) {
-        handleMethodContent(line);
+        handleMethodContent(line, i);
       }
     }
 
-    finalize();
+    finalize(lines.length - 1);
 
     const average =
       methodSizes.length === 0
@@ -136,6 +184,7 @@ export const AverageMethodSizeMetricPython: Metric = {
     return {
       label: 'Tamaño promedio de métodos (Python)',
       value: average,
+      methodBlocks: methodBlocks
     };
   },
 };

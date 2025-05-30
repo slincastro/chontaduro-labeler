@@ -1,88 +1,57 @@
-"""
-Archivo de prueba para demostrar el funcionamiento de MethodCountMetricPython
-Este archivo contiene varios tipos de funciones y métodos en Python
-"""
-
-# Función simple
-def simple_function():
-    return "Hello World"
-
-# Función con parámetros
-def function_with_params(param1, param2="default"):
-    return param1 + param2
-
-# Función async
-async def async_function():
-    await some_operation()
-    return "Async result"
-
-# Función con anotaciones de tipo
-def typed_function(name: str, age: int) -> str:
-    return f"{name} is {age} years old"
-
-# Función con parámetros complejos
-def complex_params(*args, **kwargs):
-    return args, kwargs
-
 class TestClass:
-    """Clase de prueba con varios métodos"""
+    def method1(self):
+        """
+        This is a simple method with a docstring.
+        """
+        x = 1
+        y = 2
+        return x + y
     
-    def __init__(self, value: int = 0):
-        self.value = value
-    
-    def regular_method(self):
-        return self.value
-    
-    @staticmethod
-    def static_method():
-        return "Static method result"
-    
-    @classmethod
-    def class_method(cls):
-        return cls()
-    
-    @property
-    def value_property(self):
-        return self._value
-    
-    @value_property.setter
-    def value_property(self, val):
-        self._value = val
-    
-    async def async_method(self):
-        result = await some_async_operation()
+    def method2(self, a, b):
+        """
+        This is a method with parameters.
+        """
+        result = 0
+        for i in range(a):
+            result += i
+        
+        for j in range(b):
+            result += j * 2
+        
         return result
-
-# Función con función anidada
-def outer_function():
-    def inner_function():
-        return "Inner result"
     
-    return inner_function()
+    def method3(self):
+        """
+        This is a method with nested functions.
+        """
+        def nested_function():
+            return 42
+        
+        return nested_function()
 
-# Función con múltiples decoradores
-@decorator1
-@decorator2
-def decorated_function():
-    return "Decorated result"
+def standalone_function():
+    """
+    This is a standalone function.
+    """
+    return "Hello, world!"
 
-# Esto no debería contarse como función (es una llamada)
-result = simple_function()
-
-# Esto tampoco debería contarse (es un lambda)
-lambda_func = lambda x: x * 2
-
-# String que contiene código que parece función (no debería contarse)
-code_string = """
-def fake_function():
-    pass
-"""
-
-# Comentario con función (no debería contarse)
-# def comment_function(): pass
-
-'''
-Comentario multilínea con función (no debería contarse)
-def multiline_comment_function():
-    return "fake"
-'''
+def complex_function(n):
+    """
+    This is a more complex function with multiple loops and conditions.
+    """
+    result = 0
+    
+    if n <= 0:
+        return 0
+    
+    for i in range(n):
+        if i % 2 == 0:
+            result += i
+        else:
+            result -= i
+    
+    while n > 0:
+        result += n
+        n -= 1
+    
+    return result
