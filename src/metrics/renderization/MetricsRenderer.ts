@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { Metric, MetricResult } from './Metric';
-import { HighlightManager } from '../highlight/HighlightManager';
-import { Webview } from '../webview/view';
+import { Metric, MetricResult } from '../Metric';
+import { HighlightManager } from '../../highlight/HighlightManager';
+import { Webview } from '../../webview/view';
 
 export class MetricsRenderer {
     private highlightManager: HighlightManager;

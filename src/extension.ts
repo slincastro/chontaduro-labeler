@@ -6,7 +6,7 @@ import { MetricsCSVManager } from './csv/MetricsCSVManager';
 import { MetricFactory } from './metrics/MetricFactory';
 import { LanguageDetector, LanguageInfo } from './language/LanguageDetector';
 import { NavigationManager } from './navigation/NavigationManager';
-import { MetricsRenderer } from './metrics/MetricsRenderer';
+import { MetricsRenderer } from './metrics/renderization/MetricsRenderer';
 import { MessageHandlerRegistry } from './webview/MessageHandlerRegistry';
 import { 
   ILineCountViewProvider,
