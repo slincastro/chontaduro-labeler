@@ -14,6 +14,10 @@ interface MethodBlock {
 export const AverageMethodSizeMetricPython: Metric = {
   name: 'averageMethodSizePython',
   description: 'el número promedio de líneas por método en código Python.',
+  hasAction: true,
+  action: {
+    method: 'highlightMethods',
+  },
   
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();

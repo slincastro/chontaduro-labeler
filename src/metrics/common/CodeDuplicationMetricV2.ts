@@ -5,6 +5,10 @@ import * as crypto from 'crypto';
 export const CodeDuplicationMetricV2: Metric = {
   name: 'codeDuplicationV2',
   description: 'Detecta bloques duplicados de código normalizado en el archivo.',
+  hasAction: true,
+  action: {
+    method: 'highlightDuplicatedCode',
+  },
 
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();

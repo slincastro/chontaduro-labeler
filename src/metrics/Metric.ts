@@ -9,8 +9,14 @@ export interface MetricResult {
   methodBlocks?: { startLine: number, endLine: number, size: number, name?: string }[];
 }
 
+export interface MetricAction {
+  method: string;
+}
+
 export interface Metric {
   name: string;
   description: string;
+  hasAction?: boolean;
+  action?: MetricAction;
   extract(document: vscode.TextDocument): MetricResult;
 }

@@ -4,6 +4,10 @@ import * as vscode from 'vscode';
 export const LoopCountMetric: Metric = {
   name: 'loopCount',
   description: 'El número de estructuras de bucle (for, foreach, while, do-while, forEach) en el código.',
+  hasAction: true,
+  action: {
+    method: 'highlightLoops',
+  },
 
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();

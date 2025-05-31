@@ -4,6 +4,10 @@ import * as vscode from 'vscode';
 export const CognitiveComplexityMetricPython: Metric = {
   name: 'cognitiveComplexityPython',
   description: 'Calcula la complejidad cognitiva para código Python basado en estructuras de control, anidamiento, operadores lógicos, saltos, lambdas y comprehensions.',
+  hasAction: true,
+  action: {
+    method: 'highlightMaxDepth',
+  },
 
   extract(document: vscode.TextDocument): MetricResult {
     /**

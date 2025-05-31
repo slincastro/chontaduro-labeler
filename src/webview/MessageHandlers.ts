@@ -189,3 +189,56 @@ export class HighlightMethodsHandler implements MessageHandler {
     return true;
   }
 }
+
+/**
+ * Handler for the 'highlightMaxDepth' message
+ */
+export class HighlightMaxDepthHandler implements MessageHandler {
+  handle(message: any, provider: ILineCountViewProvider): boolean {
+    if (!provider.navigationManager.currentFile) return false;
+    
+    const uri = provider.navigationManager.currentFile;
+    vscode.workspace.openTextDocument(uri).then(document => {
+      const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+      const complexityMetric = metrics.find(m => 
+        m.name === 'cognitiveComplexity' || m.name === 'cognitiveComplexityPython'
+      );
+      
+      if (complexityMetric) {
+        const result = complexityMetric.extract(document);
+        if (result.lineNumber !== undefined) {
+          // Use the existing highlightMaxDepth method from the HighlightManager
+          const editor = vscode.window.activeTextEditor;
+          if (editor && editor.document.uri.toString() === document.uri.toString()) {
+            const position = new vscode.Position(result.lineNumber, 0);
+            const selection = new vscode.Selection(position, position);
+            editor.selection = selection;
+            editor.revealRange(
+              new vscode.Range(position, position),
+              vscode.TextEditorRevealType.InCenter
+            );
+            
+            // Create a decoration for the line
+            const highlightManager = vscode.window.createTextEditorDecorationType({
+              backgroundColor: 'rgba(255, 87, 51, 0.2)',
+              overviewRulerColor: 'rgba(255, 87, 51, 0.7)',
+              overviewRulerLane: vscode.OverviewRulerLane.Right
+            });
+            
+            const range = new vscode.Range(position, position);
+            editor.setDecorations(highlightManager, [range]);
+            
+            // Dispose the decoration after 3 seconds
+            setTimeout(() => {
+              highlightManager.dispose();
+            }, 3000);
+          }
+        } else {
+          vscode.window.showInformationMessage('No se encontró una línea con alta complejidad.');
+        }
+      }
+    });
+    
+    return true;
+  }
+}

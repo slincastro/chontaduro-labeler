@@ -78,43 +78,34 @@ export class MetricsRenderer {
                 });
                 
                 content += `
-                    <button class="collapsible">
-                    <div>
-                        <span class="metric-value">${result.value}</span>
-                        ${result.label}
-                    </div>
-                    <span class="collapsible-dots">...</span>
-                    </button>
+
+
+    <button class="collapsible" style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
+      <span class="metric-value">${result.value}</span>
+      <span>${result.label}</span>
+      <span class="collapsible-dots">...</span>
+      
+
+    </button>
+
+
                     <div class="collapsible-content">
                     <div style="padding: 15px;">
                         <p><strong>Detalles:</strong></p>
+                        <p>          ${metric?.hasAction ? `
+      <button onclick="${metric?.action?.method}()" style="background: none; border: none; cursor: pointer; padding: 0; margin: 0;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#4169E1" viewBox="0 0 16 16">
+          <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zm-8 4a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
+          <path d="M8 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+        </svg>
+      </button>
+    ` :`` }</p>
                         <p>Valor: ${result.value}</p>
                         <p>Métrica: ${result.label}</p>
                         ${result.lineNumber !== undefined ? `<p>Línea: ${result.lineNumber + 1}</p>` : ''}
                         <p>Name : ${metric?.name}</p>
                         <p>Esta métrica indica ${metric?.description || 'información sobre la calidad del código.'}</p>
-                        
-                        ${metric?.name === 'codeDuplicationV2' ? `
-                        <div style="margin-top: 15px;">
-                        <button onclick="highlightDuplicatedCode()" style="background-color: #0078d7; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                            Mostrar código duplicado
-                        </button>
-                        </div>
-                        ` : ''}
-                        ${metric?.name === 'loopCount' || result.label === 'Cantidad de bucles' ? `
-                        <div style="margin-top: 15px;">
-                        <button onclick="highlightLoops()" style="background-color: #4169E1; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                            Mostrar bucles
-                        </button>
-                        </div>
-                        ` : ''}
-                        ${metric?.name === 'averageMethodSizePython' || result.label === 'Tamaño promedio de métodos (Python)' ? `
-                        <div style="margin-top: 15px;">
-                        <button onclick="highlightMethods()" style="background-color: #9932CC; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-                            Mostrar métodos
-                        </button>
-                        </div>
-                        ` : ''}
+
                     </div>
                     </div>
                 `;

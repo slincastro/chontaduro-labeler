@@ -122,6 +122,7 @@ export class Webview {
               display: flex;
               justify-content: space-between;
               align-items: center;
+              color: #000;
             }
             
             .collapsible:hover {
@@ -412,6 +413,12 @@ export class Webview {
           function highlightMethods() {
             vscode.postMessage({
               command: 'highlightMethods'
+            });
+          }
+          
+          function highlightMaxDepth() {
+            vscode.postMessage({
+              command: 'highlightMaxDepth'
             });
           }
           
