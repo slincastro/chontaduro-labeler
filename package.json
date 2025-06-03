@@ -89,7 +89,11 @@
         "lineCounter.openai.model": {
           "type": "string",
           "default": "gpt-3.5-turbo",
-          "enum": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
+          "enum": [
+            "gpt-3.5-turbo",
+            "gpt-4",
+            "gpt-4-turbo"
+          ],
           "description": "Modelo de OpenAI a utilizar para el análisis"
         }
       }
@@ -112,10 +116,12 @@
     "@typescript-eslint/parser": "^8.31.1",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
+    "cpx": "^1.5.0",
     "eslint": "^9.25.1",
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "handlebars": "^4.7.8",
     "openai": "^4.103.0",
     "uuid": "^11.1.0"
   },
