@@ -4,6 +4,10 @@ import * as vscode from 'vscode';
 export const IfCountMetric: Metric = {
   name: 'ifCount',
   description: 'El número de declaraciones condicionales (if) en el código.',
+  hasAction: true,
+  action: {
+    method: 'highlightIfs',
+  },
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     const languageId = document.languageId;
@@ -17,6 +21,7 @@ export const IfCountMetric: Metric = {
     }
 
     let ifCount = 0;
+    const ifBlocks: { startLine: number, endLine: number, loopType: string }[] = [];
 
     // Recorre cada línea para evitar contar ifs dentro de comentarios o strings
     for (let i = 0; i < document.lineCount; i++) {
@@ -37,6 +42,19 @@ export const IfCountMetric: Metric = {
       while ((match = regex.exec(line)) !== null) {
         if (!isInsideCommentOrString(line, match.index)) {
           ifCount++;
+          
+          // Determinar el tipo de if según el lenguaje
+          let ifType = 'if';
+          if (languageId === 'python') {
+            ifType = 'if-python';
+          }
+          
+          // Agregar la ubicación del if
+          ifBlocks.push({
+            startLine: i,
+            endLine: i,
+            loopType: ifType
+          });
         }
       }
     }
@@ -44,6 +62,7 @@ export const IfCountMetric: Metric = {
     return {
       label: 'Cantidad de ifs',
       value: ifCount,
+      loopBlocks: ifBlocks
     };
   },
 };

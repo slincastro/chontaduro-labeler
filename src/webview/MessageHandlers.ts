@@ -242,3 +242,29 @@ export class HighlightMaxDepthHandler implements MessageHandler {
     return true;
   }
 }
+
+/**
+ * Handler for the 'highlightIfs' message
+ */
+export class HighlightIfsHandler implements MessageHandler {
+  handle(message: any, provider: ILineCountViewProvider): boolean {
+    if (!provider.navigationManager.currentFile) return false;
+    
+    const uri = provider.navigationManager.currentFile;
+    vscode.workspace.openTextDocument(uri).then(document => {
+      const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+      const ifCountMetric = metrics.find(m => m.name === 'ifCount');
+      
+      if (ifCountMetric) {
+        const result = ifCountMetric.extract(document);
+        if (result.loopBlocks && result.loopBlocks.length > 0) {
+          provider.highlightLoops(document, result.loopBlocks);
+        } else {
+          vscode.window.showInformationMessage('No se encontraron declaraciones if en el código.');
+        }
+      }
+    });
+    
+    return true;
+  }
+}
