@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { ClassCountMetric } from '../../metrics/ClassCountMetric';
+import { ClassCountMetric } from '../../metrics/common/ClassCountMetric';
 
 suite('ClassCountMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {

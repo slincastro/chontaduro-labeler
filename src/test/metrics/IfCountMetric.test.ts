@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { IfCountMetric } from '../../metrics/IfCountMetric';
+import { IfCountMetric } from '../../metrics/common/IfCountMetric';
 
 suite('IfCountMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {

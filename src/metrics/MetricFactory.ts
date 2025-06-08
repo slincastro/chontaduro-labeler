@@ -1,12 +1,12 @@
 import { Metric } from './Metric';
 import { MetricRegistry } from './MetricRegistry';
 import { LineCountMetric } from './common/LineCountMetric';
-import { IfCountMetric } from './IfCountMetric';
+import { IfCountMetric } from './common/IfCountMetric';
 import { UsingCountMetric } from './common/UsingCountMetric';
 import { LoopCountMetric } from './common/LoopCountMetric';
 import { LambdaCountMetric } from './LambdaCountMetric';
 import { MethodCountMetric } from './common/MethodCountMetric';
-import { ClassCountMetric } from './ClassCountMetric';
+import { ClassCountMetric } from './common/ClassCountMetric';
 import { AverageMethodSizeMetric } from './common/AverageMethodSizeMetric';
 import { MethodCohesionMetric } from './MethodCohesionMetric';
 import { NestingDepthMetric } from './common/NestingDepthMetric';
@@ -26,6 +26,7 @@ import { NestingDepthMetricPython } from './python/NestingDepthMetricPython';
 import { MethodCountMetricPython } from './python/MethodCountMetricPython';
 import { CognitiveComplexityMetricPython } from './python/CognitiveComplexityMetricPython';
 import { AverageMethodSizeMetricPython } from './python/AverageMethodSizeMetricPython';
+import { PythonClassCountMetricPython } from './python/ClassCountMetricPython';
 
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
@@ -42,6 +43,7 @@ export class MetricFactory {
       CodeDuplicationMetric,
       CodeDuplicationMetricV2,
       UsingCountMetric,
+      IfCountMetric,
       LoopCountMetric
     ];
 
@@ -52,7 +54,6 @@ export class MetricFactory {
     const csharpMetrics: Metric[] = [
       ClassCountMetric,
       MethodCountMetric,
-      IfCountMetric,
       LambdaCountMetric,
       AverageMethodSizeMetric,
       MethodCohesionMetric,
@@ -64,12 +65,10 @@ export class MetricFactory {
       CognitiveComplexityMetric,
       CommentLineCountMetric,
       CommentRatioMetric,
-
     ];
     this.registry.registerLanguageMetrics('csharp', csharpMetrics);
     
     const javascriptMetrics: Metric[] = [
-      IfCountMetric,
       LambdaCountMetric,
       MethodCountMetric,
       ClassCountMetric,
@@ -81,7 +80,6 @@ export class MetricFactory {
     this.registry.registerLanguageMetrics('javascript', javascriptMetrics);
     
     const typescriptMetrics: Metric[] = [
-      IfCountMetric,
       LambdaCountMetric,
       MethodCountMetric,
       ClassCountMetric,
@@ -94,21 +92,18 @@ export class MetricFactory {
     this.registry.registerLanguageMetrics('typescript', typescriptMetrics);
     
     const pythonMetrics: Metric[] = [
-      IfCountMetric,
       LambdaCountMetric,
       MethodCountMetricPython,
-      ClassCountMetric,
       CommentLineCountMetricPython,
       CommentRatioMetricPython,
       NestingDepthMetricPython,
       CognitiveComplexityMetricPython,
-      AverageMethodSizeMetricPython
-      
+      AverageMethodSizeMetricPython,
+      PythonClassCountMetricPython
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
     const javaMetrics: Metric[] = [
-      IfCountMetric,
       LambdaCountMetric,
       MethodCountMetric,
       ClassCountMetric,
@@ -118,6 +113,7 @@ export class MetricFactory {
       CognitiveComplexityMetric,
       CommentLineCountMetric,
       CommentRatioMetric,
+
 
     ];
     this.registry.registerLanguageMetrics('java', javaMetrics);

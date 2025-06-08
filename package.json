@@ -96,6 +96,11 @@
             "gpt-4-turbo"
           ],
           "description": "Modelo de OpenAI a utilizar para el análisis"
+        },
+        "print.browser.useAlternate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use alternate browser for printing"
         }
       }
     }
