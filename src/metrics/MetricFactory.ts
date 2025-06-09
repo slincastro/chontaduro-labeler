@@ -4,7 +4,7 @@ import { LineCountMetric } from './common/LineCountMetric';
 import { IfCountMetric } from './common/IfCountMetric';
 import { UsingCountMetric } from './common/UsingCountMetric';
 import { LoopCountMetric } from './common/LoopCountMetric';
-import { LambdaCountMetric } from './LambdaCountMetric';
+import { LambdaCountMetric } from './common/LambdaCountMetric';
 import { MethodCountMetric } from './common/MethodCountMetric';
 import { ClassCountMetric } from './common/ClassCountMetric';
 import { AverageMethodSizeMetric } from './common/AverageMethodSizeMetric';
@@ -30,6 +30,7 @@ import { PythonClassCountMetricPython } from './python/ClassCountMetricPython';
 import { ConstructorCountMetricPython } from './python/ConstructorCountMetricPython';
 import { ObjectTypeMetricPython } from './python/ObjectTypeMetricPython';
 import { MethodCohesionMetricPython } from './python/MethodCohesionMetricPython';
+import { LambdaCountMetricPython } from './python/LambdaCountMetricPython';
 
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
@@ -105,7 +106,7 @@ export class MetricFactory {
     this.registry.registerLanguageMetrics('typescript', typescriptMetrics);
     
     const pythonMetrics: Metric[] = [
-      LambdaCountMetric,
+      LambdaCountMetricPython,
       MethodCountMetricPython,
       CommentLineCountMetricPython,
       CommentRatioMetricPython,
