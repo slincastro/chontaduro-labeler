@@ -29,6 +29,7 @@ import { AverageMethodSizeMetricPython } from './python/AverageMethodSizeMetricP
 import { PythonClassCountMetricPython } from './python/ClassCountMetricPython';
 import { ConstructorCountMetricPython } from './python/ConstructorCountMetricPython';
 import { ObjectTypeMetricPython } from './python/ObjectTypeMetricPython';
+import { MethodCohesionMetricPython } from './python/MethodCohesionMetricPython';
 
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
@@ -82,7 +83,8 @@ export class MetricFactory {
       CommentRatioMetric,
       ConstructorCountMetric,
       ObjectTypeMetric,
-      NestingDepthMetric
+      NestingDepthMetric,
+      MethodCohesionMetric
     ];
     this.registry.registerLanguageMetrics('javascript', javascriptMetrics);
     
@@ -97,7 +99,8 @@ export class MetricFactory {
       CommentRatioMetric,
       ConstructorCountMetric,
       ObjectTypeMetric,
-      NestingDepthMetric
+      NestingDepthMetric,
+      MethodCohesionMetric
     ];
     this.registry.registerLanguageMetrics('typescript', typescriptMetrics);
     
@@ -111,7 +114,8 @@ export class MetricFactory {
       AverageMethodSizeMetricPython,
       PythonClassCountMetricPython,
       ConstructorCountMetricPython,
-      ObjectTypeMetricPython
+      ObjectTypeMetricPython,
+      MethodCohesionMetricPython
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
@@ -126,7 +130,8 @@ export class MetricFactory {
       CommentRatioMetric,
       ConstructorCountMetricPython,
       ObjectTypeMetric,
-      NestingDepthMetric
+      NestingDepthMetric,
+      MethodCohesionMetric
     ];
     this.registry.registerLanguageMetrics('java', javaMetrics);
   }
