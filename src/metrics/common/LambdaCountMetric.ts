@@ -4,6 +4,10 @@ import * as vscode from 'vscode';
 export const LambdaCountMetric: Metric = {
   name: 'lambdaCount',
   description: 'El número de expresiones lambda en el código.',
+  hasAction: true,
+  action: {
+    method: 'highlightLambdas'
+  },
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     const languageId = document.languageId;

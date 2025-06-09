@@ -434,6 +434,12 @@ export class Webview {
             });
           }
           
+          function highlightLambdas() {
+            vscode.postMessage({
+              command: 'highlightLambdas'
+            });
+          }
+          
           // Initialize all collapsible elements after the page loads
           document.addEventListener('DOMContentLoaded', function() {
             const collapsibles = document.getElementsByClassName("collapsible");

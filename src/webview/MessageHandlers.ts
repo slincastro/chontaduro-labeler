@@ -297,3 +297,31 @@ export class HighlightConstructorsHandler implements MessageHandler {
     return true;
   }
 }
+
+/**
+ * Handler for the 'highlightLambdas' message
+ */
+export class HighlightLambdasHandler implements MessageHandler {
+  handle(message: any, provider: ILineCountViewProvider): boolean {
+    if (!provider.navigationManager.currentFile) return false;
+    
+    const uri = provider.navigationManager.currentFile;
+    vscode.workspace.openTextDocument(uri).then(document => {
+      const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+      const lambdaCountMetric = metrics.find(m => 
+        m.name === 'lambdaCount' || m.name === 'lambdaCountPython'
+      );
+      
+      if (lambdaCountMetric) {
+        const result = lambdaCountMetric.extract(document);
+        if (result.methodBlocks && result.methodBlocks.length > 0) {
+          provider.highlightMethods(document, result.methodBlocks);
+        } else {
+          vscode.window.showInformationMessage('No se encontraron expresiones lambda en el código.');
+        }
+      }
+    });
+    
+    return true;
+  }
+}
