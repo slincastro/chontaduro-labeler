@@ -22,7 +22,8 @@ import {
   HighlightLoopsHandler,
   HighlightMethodsHandler,
   HighlightMaxDepthHandler,
-  HighlightIfsHandler
+  HighlightIfsHandler,
+  HighlightConstructorsHandler
 } from './webview/MessageHandlers';
 
 const output = vscode.window.createOutputChannel("LineCounter");
@@ -170,6 +171,7 @@ export class LineCountViewProvider implements vscode.WebviewViewProvider, ILineC
     this.messageHandlerRegistry.registerHandler('highlightMethods', new HighlightMethodsHandler());
     this.messageHandlerRegistry.registerHandler('highlightMaxDepth', new HighlightMaxDepthHandler());
     this.messageHandlerRegistry.registerHandler('highlightIfs', new HighlightIfsHandler());
+    this.messageHandlerRegistry.registerHandler('highlightConstructors', new HighlightConstructorsHandler());
   }
 
   resolveWebviewView(
@@ -340,6 +342,10 @@ export class LineCountViewProvider implements vscode.WebviewViewProvider, ILineC
   
   public highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]) {
     this.metricsRenderer.highlightLoops(document, loopBlocks);
+  }
+  
+  public highlightConstructors(document: vscode.TextDocument, constructorBlocks: { startLine: number, endLine: number, name?: string }[]) {
+    this.metricsRenderer.highlightConstructors(document, constructorBlocks);
   }
   
 }

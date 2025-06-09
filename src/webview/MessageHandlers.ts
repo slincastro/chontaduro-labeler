@@ -20,6 +20,7 @@ export interface ILineCountViewProvider {
   highlightDuplicatedCode(document: vscode.TextDocument, duplicatedBlocks: { startLine: number, endLine: number, blockId?: string }[]): void;
   highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]): void;
   highlightMethods(document: vscode.TextDocument, methodBlocks: { startLine: number, endLine: number, size: number, name?: string }[]): void;
+  highlightConstructors(document: vscode.TextDocument, constructorBlocks: { startLine: number, endLine: number, name?: string }[]): void;
 }
 
 /**
@@ -261,6 +262,34 @@ export class HighlightIfsHandler implements MessageHandler {
           provider.highlightLoops(document, result.loopBlocks);
         } else {
           vscode.window.showInformationMessage('No se encontraron declaraciones if en el código.');
+        }
+      }
+    });
+    
+    return true;
+  }
+}
+
+/**
+ * Handler for the 'highlightConstructors' message
+ */
+export class HighlightConstructorsHandler implements MessageHandler {
+  handle(message: any, provider: ILineCountViewProvider): boolean {
+    if (!provider.navigationManager.currentFile) return false;
+    
+    const uri = provider.navigationManager.currentFile;
+    vscode.workspace.openTextDocument(uri).then(document => {
+      const metrics = MetricFactory.getMetricsForLanguage(document.languageId.toLowerCase());
+      const constructorCountMetric = metrics.find(m => 
+        m.name === 'constructorCount' || m.name === 'constructorCountPython'
+      );
+      
+      if (constructorCountMetric) {
+        const result = constructorCountMetric.extract(document);
+        if (result.constructorBlocks && result.constructorBlocks.length > 0) {
+          provider.highlightConstructors(document, result.constructorBlocks);
+        } else {
+          vscode.window.showInformationMessage('No se encontraron constructores en el código.');
         }
       }
     });

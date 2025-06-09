@@ -7,6 +7,7 @@ export class HighlightManager {
     private duplicatedCodeDecorationTypes: Map<string, vscode.TextEditorDecorationType> = new Map();
     private methodDecorationTypes: Map<number, vscode.TextEditorDecorationType> = new Map();
     private loopDecorationType: vscode.TextEditorDecorationType | null = null;
+    private constructorDecorationType: vscode.TextEditorDecorationType | null = null;
 
     constructor(private readonly extensionUri: vscode.Uri) {
         this.maxDepthDecorationType = vscode.window.createTextEditorDecorationType({
@@ -56,6 +57,13 @@ export class HighlightManager {
                 editor.setDecorations(this.loopDecorationType, []);
                 this.loopDecorationType.dispose();
                 this.loopDecorationType = null;
+            }
+            
+            // Clear constructor highlight
+            if (this.constructorDecorationType) {
+                editor.setDecorations(this.constructorDecorationType, []);
+                this.constructorDecorationType.dispose();
+                this.constructorDecorationType = null;
             }
         }
     }
@@ -323,6 +331,53 @@ export class HighlightManager {
         }
     }
 
+    public highlightConstructors(document: vscode.TextDocument, constructorBlocks: { startLine: number, endLine: number, name?: string }[]): void {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.uri.toString() !== document.uri.toString()) {
+            return;
+        }
+        
+        // Dispose of previous constructor decoration type if it exists
+        if (this.constructorDecorationType) {
+            editor.setDecorations(this.constructorDecorationType, []);
+            this.constructorDecorationType.dispose();
+            this.constructorDecorationType = null;
+        }
+        
+        // Create a new constructor decoration type
+        this.constructorDecorationType = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(75, 0, 130, 0.2)', // Indigo with transparency
+            overviewRulerColor: 'rgba(75, 0, 130, 0.7)',
+            overviewRulerLane: vscode.OverviewRulerLane.Right,
+            before: {
+                contentText: '🔨 ', // Constructor symbol
+                color: '#4B0082',
+                margin: '0 5px 0 0'
+            }
+        });
+        
+        const ranges: vscode.Range[] = [];
+        
+        for (const block of constructorBlocks) {
+            const startPos = new vscode.Position(block.startLine, 0);
+            const endPos = new vscode.Position(block.endLine, document.lineAt(Math.min(block.endLine, document.lineCount - 1)).text.length);
+            ranges.push(new vscode.Range(startPos, endPos));
+        }
+        
+        editor.setDecorations(this.constructorDecorationType, ranges);
+        
+        if (constructorBlocks.length > 0) {
+            const firstBlock = constructorBlocks[0];
+            const startPos = new vscode.Position(firstBlock.startLine, 0);
+            const endPos = new vscode.Position(firstBlock.endLine, document.lineAt(Math.min(firstBlock.endLine, document.lineCount - 1)).text.length);
+            
+            editor.revealRange(
+                new vscode.Range(startPos, endPos),
+                vscode.TextEditorRevealType.InCenter
+            );
+        }
+    }
+
     public dispose(): void {
         // Dispose of all decoration types
         this.maxDepthDecorationType.dispose();
@@ -331,6 +386,9 @@ export class HighlightManager {
         this.methodDecorationTypes.forEach(decorationType => decorationType.dispose());
         if (this.loopDecorationType) {
             this.loopDecorationType.dispose();
+        }
+        if (this.constructorDecorationType) {
+            this.constructorDecorationType.dispose();
         }
     }
 }

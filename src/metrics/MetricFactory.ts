@@ -15,7 +15,7 @@ import { CommentRatioMetric } from './common/CommentRatioMetric';
 import { CodeDuplicationMetric } from './CodeDuplicationMetric';
 import { GetterSetterCountMetric } from './GetterSetterCountMetric';
 import { ObjectTypeMetric } from './ObjectTypeMetric';
-import { ConstructorCountMetric } from './ConstructorCountMetric';
+import { ConstructorCountMetric } from './common/ConstructorCountMetric';
 import { InterfaceConstructorParameterCountMetric } from './InterfaceConstructorParameterCountMetric';
 import { SingleResponsibilityMetric } from './SingleResponsibilityMetric';
 import { CognitiveComplexityMetric } from './common/CognitiveComplexityMetric';
@@ -27,6 +27,7 @@ import { MethodCountMetricPython } from './python/MethodCountMetricPython';
 import { CognitiveComplexityMetricPython } from './python/CognitiveComplexityMetricPython';
 import { AverageMethodSizeMetricPython } from './python/AverageMethodSizeMetricPython';
 import { PythonClassCountMetricPython } from './python/ClassCountMetricPython';
+import { ConstructorCountMetricPython } from './python/ConstructorCountMetricPython';
 
 export class MetricFactory {
   private static registry = MetricRegistry.getInstance();
@@ -44,7 +45,8 @@ export class MetricFactory {
       CodeDuplicationMetricV2,
       UsingCountMetric,
       IfCountMetric,
-      LoopCountMetric
+      LoopCountMetric,
+
     ];
 
     this.registry.registerCommonMetrics(commonMetrics);
@@ -59,12 +61,12 @@ export class MetricFactory {
       MethodCohesionMetric,
       GetterSetterCountMetric,
       ObjectTypeMetric,
-      ConstructorCountMetric,
       InterfaceConstructorParameterCountMetric,
       SingleResponsibilityMetric,
       CognitiveComplexityMetric,
       CommentLineCountMetric,
       CommentRatioMetric,
+      ConstructorCountMetric
     ];
     this.registry.registerLanguageMetrics('csharp', csharpMetrics);
     
@@ -76,6 +78,7 @@ export class MetricFactory {
       CognitiveComplexityMetric,
       CommentLineCountMetric,
       CommentRatioMetric,
+      ConstructorCountMetric
     ];
     this.registry.registerLanguageMetrics('javascript', javascriptMetrics);
     
@@ -88,6 +91,7 @@ export class MetricFactory {
       CognitiveComplexityMetric,
       CommentLineCountMetric,
       CommentRatioMetric,
+      ConstructorCountMetric
     ];
     this.registry.registerLanguageMetrics('typescript', typescriptMetrics);
     
@@ -99,7 +103,8 @@ export class MetricFactory {
       NestingDepthMetricPython,
       CognitiveComplexityMetricPython,
       AverageMethodSizeMetricPython,
-      PythonClassCountMetricPython
+      PythonClassCountMetricPython,
+      ConstructorCountMetricPython,
     ];
     this.registry.registerLanguageMetrics('python', pythonMetrics);
     
@@ -109,12 +114,10 @@ export class MetricFactory {
       ClassCountMetric,
       AverageMethodSizeMetric,
       GetterSetterCountMetric,
-      ConstructorCountMetric,
       CognitiveComplexityMetric,
       CommentLineCountMetric,
       CommentRatioMetric,
-
-
+      ConstructorCountMetricPython
     ];
     this.registry.registerLanguageMetrics('java', javaMetrics);
   }

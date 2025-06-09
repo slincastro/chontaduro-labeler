@@ -226,6 +226,10 @@ export class MetricsRenderer {
     public highlightLoops(document: vscode.TextDocument, loopBlocks: { startLine: number, endLine: number, loopType: string }[]): void {
         this.highlightManager.highlightLoops(document, loopBlocks);
     }
+    
+    public highlightConstructors(document: vscode.TextDocument, constructorBlocks: { startLine: number, endLine: number, name?: string }[]): void {
+        this.highlightManager.highlightConstructors(document, constructorBlocks);
+    }
 
     public clearHighlights(): void {
         this.highlightManager.clearMethodHighlights();

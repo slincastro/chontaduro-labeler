@@ -7,6 +7,7 @@ export interface MetricResult {
   duplicatedBlocks?: { startLine: number, endLine: number, blockId?: string }[];
   loopBlocks?: { startLine: number, endLine: number, loopType: string }[];
   methodBlocks?: { startLine: number, endLine: number, size: number, name?: string }[];
+  constructorBlocks?: { startLine: number, endLine: number, name?: string }[];
 }
 
 export interface MetricAction {

@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { ConstructorCountMetric } from '../../metrics/ConstructorCountMetric';
+import { ConstructorCountMetric } from '../../metrics/common/ConstructorCountMetric';
 
 suite('ConstructorCountMetric Test Suite', () => {
   test('Should count constructors in a class', () => {
