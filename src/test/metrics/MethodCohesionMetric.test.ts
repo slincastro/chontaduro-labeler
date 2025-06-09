@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { MethodCohesionMetric } from '../../metrics/MethodCohesionMetric';
+import { MethodCohesionMetric } from '../../metrics/common/MethodCohesionMetric';
 
 suite('MethodCohesionMetric Test Suite', () => {
 

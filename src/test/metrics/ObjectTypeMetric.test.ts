@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { ObjectTypeMetric } from '../../metrics/ObjectTypeMetric';
+import { ObjectTypeMetric } from '../../metrics/common/ObjectTypeMetric';
 
 suite('ObjectTypeMetric Test Suite', () => {
   // Type code mapping for reference:
