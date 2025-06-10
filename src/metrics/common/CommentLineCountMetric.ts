@@ -1,21 +1,16 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
-export const CommentRatioMetric: MetricExtractor = {
-  name: 'commentRatio',
-  description: 'la proporción de líneas de comentarios respecto al total de líneas de código.',
+export const CommentLineCountMetric: Metric = {
+  name: 'commentLineCount',
+  description: 'el número total de líneas de comentarios en el código.',
   extract(document: vscode.TextDocument): MetricResult {
-    const totalLines = document.lineCount;
+    const text = document.getText();
     let commentLineCount = 0;
     
     // Process the document line by line
     for (let i = 0; i < document.lineCount; i++) {
       const line = document.lineAt(i).text.trim();
-      
-      // Skip empty lines
-      if (line === '') {
-        continue;
-      }
       
       // Check for single-line comments (// or ///)
       if (line.startsWith('//')) {
@@ -48,12 +43,9 @@ export const CommentRatioMetric: MetricExtractor = {
       }
     }
     
-    // Calculate the ratio as a percentage
-    const ratio = totalLines > 0 ? (commentLineCount / totalLines) * 100 : 0;
-    
     return {
-      label: 'Ratio de comentarios',
-      value: Math.round(ratio * 100) / 100, // Round to 2 decimal places
+      label: 'Líneas de comentarios',
+      value: commentLineCount,
     };
   },
 };

@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { LoopCountMetric } from '../../metrics/LoopCountMetric';
+import { LoopCountMetric } from '../../metrics/common/LoopCountMetric';
 
 suite('LoopCountMetric Test Suite', () => {
 

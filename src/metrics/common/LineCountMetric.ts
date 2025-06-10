@@ -1,12 +1,12 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
-export const LineCountMetric: MetricExtractor = {
+export const LineCountMetric: Metric = {
   name: 'lineCount',
   description: 'el número total de líneas de código en el archivo.',
   extract(document: vscode.TextDocument): MetricResult {
     return {
-      label: 'Líneas de código',
+      label: 'Líneas',
       value: document.lineCount,
     };
   },

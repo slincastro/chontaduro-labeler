@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { AverageMethodSizeMetric } from '../../metrics/AverageMethodSizeMetric';
+import { AverageMethodSizeMetric } from '../../metrics/common/AverageMethodSizeMetric';
 
 suite('AverageMethodSizeMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {

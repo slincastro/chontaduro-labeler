@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { NestingDepthMetric } from '../../metrics/NestingDepthMetric';
+import { NestingDepthMetric } from '../../metrics/common/NestingDepthMetric';
 
 suite('NestingDepthMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {
@@ -8,7 +8,7 @@ suite('NestingDepthMetric Test Suite', () => {
     const result = NestingDepthMetric.extract(document);
     
     assert.strictEqual(result.value, 0);
-    assert.strictEqual(result.label, 'Profundidad máxima de bloques anidados');
+    assert.strictEqual(result.label, 'Profundidad máxima de bloques anidados ');
   });
 
   test('Should return 0 for document with no nesting', () => {

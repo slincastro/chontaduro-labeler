@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { CommentRatioMetric } from '../../metrics/CommentRatioMetric';
+import { CommentRatioMetric } from '../../metrics/common/CommentRatioMetric';
 
 suite('CommentRatioMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {

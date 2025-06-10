@@ -1,24 +1,25 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
-export const CommentLineCountMetric: MetricExtractor = {
-  name: 'commentLineCount',
-  description: 'el número total de líneas de comentarios en el código.',
+export const CommentRatioMetric: Metric = {
+  name: 'commentRatio',
+  description: 'la proporción de líneas de comentarios respecto al total de líneas de código.',
   extract(document: vscode.TextDocument): MetricResult {
-    const text = document.getText();
+    const totalLines = document.lineCount;
     let commentLineCount = 0;
     
-    // Process the document line by line
     for (let i = 0; i < document.lineCount; i++) {
       const line = document.lineAt(i).text.trim();
       
-      // Check for single-line comments (// or ///)
+      if (line === '') {
+        continue;
+      }
+      
       if (line.startsWith('//')) {
         commentLineCount++;
         continue;
       }
       
-      // Check for lines that are part of multi-line comments (/* ... */)
       if (line.startsWith('/*') || line.startsWith('*') || line.startsWith('*/') || 
           (line.includes('/*') && !line.includes('*/')) || 
           (!line.includes('/*') && line.includes('*/'))) {
@@ -26,14 +27,12 @@ export const CommentLineCountMetric: MetricExtractor = {
         continue;
       }
       
-      // Check for lines that contain both code and comments
       const commentIndex = line.indexOf('//');
       if (commentIndex > 0 && !isInsideString(line, commentIndex)) {
         commentLineCount++;
         continue;
       }
       
-      // Check for multi-line comments in the middle of a line
       const multiCommentStart = line.indexOf('/*');
       const multiCommentEnd = line.indexOf('*/');
       if (multiCommentStart >= 0 && !isInsideString(line, multiCommentStart) && 
@@ -43,9 +42,11 @@ export const CommentLineCountMetric: MetricExtractor = {
       }
     }
     
+    const ratio = totalLines > 0 ? (commentLineCount / totalLines) * 100 : 0;
+    
     return {
-      label: 'Líneas de comentarios',
-      value: commentLineCount,
+      label: 'Ratio de comentarios (%)',
+      value: Math.round(ratio * 100) / 100, // Round to 2 decimal places
     };
   },
 };

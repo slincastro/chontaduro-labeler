@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { MethodCountMetric } from '../../metrics/MethodCountMetric';
+import { MethodCountMetric } from '../../metrics/common/MethodCountMetric';
 
 suite('MethodCountMetric Test Suite', () => {
   test('Should return 0 for empty document', () => {
@@ -8,7 +8,7 @@ suite('MethodCountMetric Test Suite', () => {
     const result = MethodCountMetric.extract(document);
     
     assert.strictEqual(result.value, 0);
-    assert.strictEqual(result.label, 'Métodos');
+    assert.strictEqual(result.label, 'Cantidad de métodos');
   });
 
   test('Should return 0 for document with no methods', () => {

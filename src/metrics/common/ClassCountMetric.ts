@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
-export const ClassCountMetric: MetricExtractor = {
+export const ClassCountMetric: Metric = {
   name: 'classCount',
   description: 'el número total de clases definidas en el archivo.',
   extract(document: vscode.TextDocument): MetricResult {

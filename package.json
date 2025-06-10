@@ -15,6 +15,7 @@
     "onStartupFinished",
     "onLanguage:csharp",
     "onLanguage:typescript",
+    "onLanguage:python",
     "onView:lineCounterView"
   ],
   "main": "./out/extension.js",
@@ -95,6 +96,11 @@
             "gpt-4-turbo"
           ],
           "description": "Modelo de OpenAI a utilizar para el análisis"
+        },
+        "print.browser.useAlternate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use alternate browser for printing"
         }
       }
     }
@@ -118,6 +124,7 @@
     "@vscode/test-electron": "^2.5.2",
     "cpx": "^1.5.0",
     "eslint": "^9.25.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {

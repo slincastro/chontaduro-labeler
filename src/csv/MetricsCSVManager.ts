@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { MetricExtractor, MetricResult } from '../metrics/MetricExtractor';
+import { Metric, MetricResult } from '../metrics/Metric';
 import { LanguageDetector } from '../language/LanguageDetector';
 
 export class MetricsCSVManager {
@@ -10,7 +10,7 @@ export class MetricsCSVManager {
     private output: vscode.OutputChannel;
     
     constructor(
-        private readonly metricExtractors: MetricExtractor[],
+        private readonly metrics: Metric[],
         outputChannel: vscode.OutputChannel
     ) {
         this.output = outputChannel;
@@ -58,8 +58,8 @@ export class MetricsCSVManager {
                 const header = ['UUID', 'Timestamp', 'LabelingDateTime', 'Filename', 'FilePath', 'Language', 'NeedsRefactoring'];
                 
                 // Add metric names to header
-                this.metricExtractors.forEach(extractor => {
-                    header.push(extractor.name);
+                this.metrics.forEach(metric => {
+                    header.push(metric.name);
                 });
                 
                 fs.writeFileSync(this.csvFilePath, header.join(',') + '\n');
@@ -89,8 +89,8 @@ export class MetricsCSVManager {
             
             // Extract all metrics
             const metricValues: number[] = [];
-            for (const extractor of this.metricExtractors) {
-                const result = extractor.extract(document);
+            for (const metric of this.metrics) {
+                const result = metric.extract(document);
                 metricValues.push(result.value);
             }
             

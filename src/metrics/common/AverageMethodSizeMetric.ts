@@ -1,9 +1,13 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
-export const AverageMethodSizeMetric: MetricExtractor = {
+export const AverageMethodSizeMetric: Metric = {
   name: 'averageMethodSize',
   description: 'el número promedio de líneas por método en el código.',
+  hasAction: true,
+  action: {
+    method: 'highlightMethods',
+  },
   extract(document: vscode.TextDocument): MetricResult {
     const text = document.getText();
     const lines = text.split('\n');
@@ -11,15 +15,23 @@ export const AverageMethodSizeMetric: MetricExtractor = {
     const methodSignatureRegex = /^\s*(public|private|protected|internal)?\s*(static|virtual|override|async|new)?\s+[\w<>\[\],\s]+\s+\w+(?:<[\w,\s<>]+>)?\s*\([^)]*\)(?:\s+where\s+[\w\s:,]+)?\s*$/;
 
     let methodSizes: number[] = [];
+    let methodBlocks: { startLine: number, endLine: number, size: number, name?: string }[] = [];
     let insideMethod = false;
     let braceCount = 0;
     let currentSize = 0;
+    let methodStartLine = 0;
+    let methodName = '';
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
       if (!insideMethod) {
         if (methodSignatureRegex.test(line.trim())) {
+          // Extract method name from the signature
+          const methodNameMatch = line.match(/\s+(\w+)\s*\(/);
+          methodName = methodNameMatch ? methodNameMatch[1] : '';
+          methodStartLine = i;
+          
           let j = i;
           while (j < lines.length && !lines[j].includes('{')) {
             j++;
@@ -39,6 +51,12 @@ export const AverageMethodSizeMetric: MetricExtractor = {
 
         if (braceCount === 0) {
           methodSizes.push(currentSize);
+          methodBlocks.push({
+            startLine: methodStartLine,
+            endLine: i,
+            size: currentSize,
+            name: methodName
+          });
           insideMethod = false;
         }
       }
@@ -51,6 +69,7 @@ export const AverageMethodSizeMetric: MetricExtractor = {
     return {
       label: 'Tamaño promedio de métodos',
       value: average,
+      methodBlocks: methodBlocks
     };
   },
 };

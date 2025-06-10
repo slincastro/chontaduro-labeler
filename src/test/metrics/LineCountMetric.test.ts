@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { LineCountMetric } from '../../metrics/LineCountMetric';
+import { LineCountMetric } from '../../metrics/common/LineCountMetric';
 
 suite('LineCountMetric Test Suite', () => {
   test('Debe contar correctamente las líneas de un documento', async () => {

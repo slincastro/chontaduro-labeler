@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 
-export const CodeDuplicationMetric: MetricExtractor = {
+export const CodeDuplicationMetric: Metric = {
   name: 'codeDuplication',
   description: 'la cantidad de código duplicado detectado en el archivo.',
   extract(document: vscode.TextDocument): MetricResult {
@@ -88,7 +88,7 @@ export const CodeDuplicationMetric: MetricExtractor = {
       : 0;
     
     return {
-      label: 'Duplicación de código',
+      label: 'Porcentaje de código duplicado (%)',
       value: Math.round(duplicationPercentage * 100) / 100, // Round to 2 decimal places
     };
   },

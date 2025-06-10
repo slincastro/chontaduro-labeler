@@ -1,4 +1,4 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from './Metric';
 import * as vscode from 'vscode';
 import OpenAI from 'openai';
 
@@ -7,6 +7,9 @@ const analysisResults = new Map<string, number>();
 async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
   const code = document.getText();
   const documentUri = document.uri.toString();
+  
+  // Start loading spinner
+  vscode.commands.executeCommand('chontaduro.startLoading');
   
   try {
     const config = vscode.workspace.getConfiguration('lineCounter');
@@ -24,20 +27,26 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
     });
 
     const prompt = `
-    Analiza el siguiente código y determina si cumple con el Principio de Responsabilidad Única (SRP).
-    El Principio de Responsabilidad Única establece que una clase debe tener una sola razón para cambiar, 
-    lo que significa que debe tener una sola responsabilidad o función.
-
-    Código a analizar:
+    Analiza el siguiente archivo de código y evalúa si, en términos generales, **cumple con el Principio de Responsabilidad Única (SRP)**.
+    
+    El Principio de Responsabilidad Única (SRP) indica que un módulo (por ejemplo, una clase o un archivo) debería tener una sola razón para cambiar. Esto significa que todas las funciones o clases dentro del archivo deberían estar relacionadas con una única responsabilidad de negocio o técnica.
+    
+    ### Consideraciones:
+    - Evalúa si las funciones, clases o componentes del archivo contribuyen a una única responsabilidad principal.
+    - No seas excesivamente estricto: en entornos reales es común que existan pequeñas utilidades o funciones auxiliares siempre que estén alineadas con la responsabilidad principal.
+    - Si detectas responsabilidades mezcladas, explica brevemente cuáles son.
+    
+    ### Código a analizar:
     \`\`\`
     ${code}
     \`\`\`
-
-    Responde con un JSON con el siguiente formato:
+    
+    Responde con un JSON en el siguiente formato:
+    
     {
-      "followsSRP": true/false,
-      "explanation": "Explicación detallada de por qué cumple o no con SRP",
-      "suggestions": "Sugerencias para mejorar si no cumple con SRP"
+      "followsSRP": true | false,
+      "explanation": "Explicación razonada de si el archivo mantiene una responsabilidad única, mencionando elementos clave.",
+      "suggestions": "Sugerencias prácticas para mejorar la adherencia al SRP, si aplica. Si cumple, puedes dejar este campo vacío o con 'Ninguna sugerencia'."
     }
     `;
 
@@ -62,28 +71,38 @@ async function analyzeWithOpenAI(document: vscode.TextDocument): Promise<void> {
 
     const analysis = JSON.parse(jsonMatch[0]);
     
-    const value = analysis.followsSRP ? 0 : 1; 
+    const value = analysis.followsSRP ? 1 : 0; 
     
     analysisResults.set(documentUri, value);
     
+    // Force UI update after analysis is complete
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor && activeEditor.document.uri.toString() === documentUri) {
       vscode.commands.executeCommand('lineCounterView.focus');
+      
+      // Trigger a UI update by simulating a document change
+      vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
     }
     
     // Show a simple information message with the result
     const message = value === 1 
-      ? `❌ La clase no cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`
-      : `✅ La clase cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`;
+      ? `✅ La clase cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`
+      : `❌ La clase no cumple con el Principio de Responsabilidad Única: ${analysis.explanation}`;
     
     vscode.window.showInformationMessage(message);
   } catch (error: any) {
     vscode.window.showErrorMessage(`Error al analizar SRP: ${error.message}`);
     analysisResults.set(documentUri, 0);
+  } finally {
+    // Stop loading spinner regardless of success or failure
+    vscode.commands.executeCommand('chontaduro.stopLoading');
+    
+    // Notify the extension that the OpenAI request is complete to update the UI
+    vscode.commands.executeCommand('chontaduro.updateAIMetrics');
   }
 }
 
-export const SingleResponsibilityMetric: MetricExtractor = {
+export const SingleResponsibilityMetric: Metric = {
   name: 'singleResponsibility',
   description: 'evalúa si la clase cumple con el principio de responsabilidad única (SRP).',
   extract(document: vscode.TextDocument): MetricResult {

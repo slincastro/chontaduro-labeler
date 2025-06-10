@@ -1,7 +1,7 @@
-import { MetricExtractor, MetricResult } from './MetricExtractor';
+import { Metric, MetricResult } from '../Metric';
 import * as vscode from 'vscode';
 
-export const NestingDepthMetric: MetricExtractor = {
+export const NestingDepthMetric: Metric = {
   name: 'nestingDepth',
   description: 'el nivel máximo de anidamiento de bloques de código.',
   extract(document: vscode.TextDocument): MetricResult {
@@ -55,7 +55,7 @@ export const NestingDepthMetric: MetricExtractor = {
     }
 
     return {
-      label: 'Profundidad de anidamiento',
+      label: 'Profundidad máxima de bloques anidados ',
       value: maxDepth,
       lineNumber: maxDepthLineIndex,
     };
