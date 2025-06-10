@@ -122,11 +122,13 @@
     "@typescript-eslint/parser": "^8.31.1",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
+    "cpx": "^1.5.0",
     "eslint": "^9.25.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "handlebars": "^4.7.8",
     "openai": "^4.103.0",
     "uuid": "^11.1.0"
   },
