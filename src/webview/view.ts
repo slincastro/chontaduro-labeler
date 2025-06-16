@@ -13,7 +13,6 @@ export class Webview {
   ): string {
     // 1) leer plantilla externa
     const templatePath = path.join(extensionUri.fsPath,'src' ,'media', 'template.html');
-    console.log('Leyendo plantilla en', templatePath);
     const raw = fs.readFileSync(templatePath, 'utf8');
 
     // 2) compilar con Handlebars
