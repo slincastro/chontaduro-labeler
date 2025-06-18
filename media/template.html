@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Refactorial</title>
+
+  <script src="https://kit.fontawesome.com/6a2b987c6b.js" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="{{cssUri}}" />
+</head>
+
+<body style="font-family: sans-serif; padding: 1em;">
+  <div class="language-info">
+    <div class="header-container">
+      <div id="languageInfoContainer" class="language-circle">
+        <i  id="languageIconElement" class="language-icon"></i>
+        <div id="languageNameElement" class="language-name"></div>
+      </div>
+      <div id="fileNameElement" class="file-name">{{title}}</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1em; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div>
+      <input type="checkbox" id="refactoringCheckbox" onchange="toggleRefactoring(this.checked)" />
+      <label for="refactoringCheckbox" style="margin-left: .5em;">Debe refactorizarse</label>
+    </div>
+  </div>
+
+  {{{content}}}
+
+  <div style="padding: 4px; border-radius: 2px; margin-bottom: 5px; display: flex; align-items: center;">
+    <strong>Archivos procesados:</strong>&nbsp;{{processedFilesCount}}
+    <button onclick="openCsvFile()" class="csv-btn" title="Abrir CSV">
+      <i class="fas fa-file-csv"></i><span>Abrir&nbsp;CSV</span>
+    </button>
+  </div>
+
+  <p style="color: #888; margin-top: 2em;">Powered&nbsp;by&nbsp;ReFactorial&nbsp;!!</p>
+
+  <div id="settingsPanel" class="settings-panel">
+    <div class="settings-content">
+      <div class="settings-header">
+        <h3 style="margin: 0;">Configuración de OpenAI</h3>
+        <div class="settings-close" onclick="closeSettings()">×</div>
+      </div>
+
+      <div class="settings-form-group">
+        <label class="settings-label" for="apiKey">API Key de OpenAI</label>
+        <input type="password" id="apiKey" class="settings-input" placeholder="Ingresa tu API key" />
+      </div>
+
+      <div class="settings-form-group">
+        <label class="settings-label" for="model">Modelo</label>
+        <select id="model" class="settings-select">
+          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+          <option value="gpt-4">GPT-4</option>
+          <option value="gpt-4-turbo">GPT-4 Turbo</option>
+          <option value="gpt-4o">GPT-4o</option>
+        </select>
+      </div>
+
+      <button class="settings-button" onclick="saveSettings()">Guardar</button>
+    </div>
+  </div>
+
+  <script src="{{jsUri}}" nonce="{{nonce}}"></script>
+</body>
+</html>

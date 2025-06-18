@@ -108,7 +108,8 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "postcompile": "cpx \"media/**/*\" out/media",
+    "watch":   "npm-run-all -p \"tsc -watch -p ./\" \"cpx \\\"media/**/*\\\" out/media -w\"",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test"

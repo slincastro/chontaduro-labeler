@@ -1,0 +1,122 @@
+/* ───────────────────────────  Cabecera de archivo  ─────────────────────────── */
+/*  Archivo: media/styles.css                                                   */
+/*  Contiene TODOS los estilos que antes estaban embebidos en el Webview HTML   */
+/*  No se ha tocado ni eliminado ninguna clase para que todo siga funcionando   */
+/* ───────────────────────────────────────────────────────────────────────────── */
+
+
+/* ╭────────────────────────  Sección “language info”  ────────────────────────╮ */
+.language-info{
+  display:flex;
+  align-items:center;
+  margin-bottom:1em;
+  padding:0.5em;
+  border-radius:8px;
+  color:#ffffff;
+  flex-wrap:wrap;
+}
+.language-circle{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:30px;
+  height:30px;
+  border-radius:50%;
+  margin-right:0.8em;
+  background:rgba(255,255,255,.2);
+  padding:0 6px;
+}
+.language-icon{font-size:1.2em;margin-right:5px;}
+.language-name{font-weight:700;font-size:.9em;white-space:nowrap;}
+.file-name{
+  font-weight:700;font-size:1.1em;margin-left:0.8em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.header-container{display:flex;align-items:center;flex-wrap:wrap;width:100%;}
+.language-subtitle{font-size:.9em;width:100%;margin-top:.3em;}
+
+
+/* ╭─────────────────────────────  Métricas  ───────────────────────────────────╮ */
+.metrics-table{
+  width:100%;border-collapse:collapse;margin:1em 0;font-size:.95em;
+  box-shadow:0 2px 4px rgba(0,0,0,.1);border-radius:8px;overflow:hidden;
+}
+.metrics-table thead{background:#2c3e50;color:#fff;}
+.metrics-table th{padding:12px 15px;text-align:left;font-weight:bold;}
+.metrics-table td{padding:6px 15px;border-bottom:1px solid #ddd;}
+.metrics-table tbody tr:nth-child(even){background:rgba(0,0,0,.05);}
+.metrics-table tbody tr:hover{background:rgba(0,0,0,.075);}
+.metrics-table td:first-child{font-weight:bold;text-align:center;width:30px;}
+
+
+/* ╭───────────────────────  Collapsible de métricas  ─────────────────────────╮ */
+.collapsible{
+  cursor:pointer;padding:5px 15px;width:100%;border:none;text-align:left;
+  outline:none;font-size:1em;background:#f1f1f1;border-radius:4px;margin-bottom:2px;
+  display:flex;justify-content:space-between;align-items:center;color:#000;
+}
+.collapsible:hover{background:#e0e0e0;}
+.collapsible-content{
+  padding:0;max-height:0;overflow:hidden;transition:max-height .2s ease-out;
+  background:#fff;border-radius:0 0 8px 8px;
+}
+.collapsible-dots{display:inline-block;width:20px;text-align:center;}
+.metric-value{font-weight:bold;margin-right:10px;}
+
+
+/* ╭────────────────────────────  Settings icon  ──────────────────────────────╮ */
+.settings-icon{
+  cursor:pointer;font-size:1.2em;color:#fff;width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  background:rgba(255,255,255,.2);transition:background .3s ease;margin-left:5px;
+}
+.settings-icon:hover{background:rgba(255,255,255,.3);}
+
+
+/* ╭───────────────────────────  Settings panel  ──────────────────────────────╮ */
+.settings-panel{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  z-index:1000;justify-content:center;align-items:center;
+}
+.settings-content{
+  background:#fff;padding:20px;border-radius:8px;width:80%;max-width:500px;
+  box-shadow:0 4px 8px rgba(0,0,0,.2);
+}
+.settings-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.settings-close{cursor:pointer;font-size:1.5em;color:#888;}
+.settings-close:hover{color:#333;}
+.settings-form-group{margin-bottom:15px;}
+.settings-label{display:block;margin-bottom:5px;font-weight:bold;}
+.settings-input,
+.settings-select{
+  width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:1em;
+}
+.settings-button{
+  background:#2c3e50;color:#fff;border:none;padding:10px 15px;border-radius:4px;
+  font-size:1em;cursor:pointer;margin-top:10px;
+}
+.settings-button:hover{background:#34495e;}
+
+
+/* ╭────────────────────  Métricas “AI” destacadas  ───────────────────────────╮ */
+.ai-metric{background:#f0f7ff;border-left:3px solid #0078d7;}
+.ai-metric:hover{background:#e0f0ff;}
+.ai-metric-loading{
+  display:flex;align-items:center;padding:10px 15px;background:#f0f7ff;
+  border-radius:4px;margin-bottom:2px;border-left:3px solid #0078d7;
+}
+.spinner{margin-right:10px;display:flex;align-items:center;}
+.spinner img{animation:spin 1.5s linear infinite;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
+
+/* ╭──────────────────────────  Botón CSV reutilizable  ───────────────────────╮ */
+.csv-btn{
+  background:none;border:none;cursor:pointer;color:#0078d7;
+  display:flex;align-items:center;padding:2px 5px;border-radius:4px;font-size:.9em;
+}
+.csv-btn i{margin-right:4px;}
+
+
+/* ╭──────────────────────────  Otros helpers (opcional)  ─────────────────────╮ */
+/* Añade aquí cualquier nuevo selector que necesites sin tocar HTML embebido   */
